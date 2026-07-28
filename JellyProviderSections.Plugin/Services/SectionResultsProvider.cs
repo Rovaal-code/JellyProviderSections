@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
-using Jellyfin.Plugin.JellyProviderSections.Configuration;
+using Jellyfin.Plugin.JellyProviderSections.Models;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Dto;
 using MediaBrowser.Model.Querying;
@@ -22,9 +19,9 @@ namespace Jellyfin.Plugin.JellyProviderSections.Services;
 /// 1. Constructor parameters must be resolvable from HSS's container, so only
 ///    Jellyfin core services are injected here. This plugin's own services come
 ///    from PluginServiceLocator instead.
-/// 2. The payload type belongs to HSS and cannot be referenced at compile time,
-///    so it is accepted as object and read reflectively. That also makes this
-///    resilient to the payload type changing shape between HSS versions.
+/// 2. HSS binds its JSON payload onto this method's declared parameter type, so
+///    the parameter is a concrete class (see HomeScreenSectionPayload) rather
+///    than object, which would arrive as an opaque JObject.
 /// </summary>
 public class SectionResultsProvider
 {
@@ -45,25 +42,21 @@ public class SectionResultsProvider
     /// <summary>
     /// Returns the items for one section. Called by Home Screen Sections.
     /// </summary>
-    /// <param name="payload">
-    /// HSS's section payload. Read reflectively for AdditionalData (our section
-    /// id) and UserId.
-    /// </param>
+    /// <param name="payload">The section payload, carrying the user and section id.</param>
     /// <returns>The items to render in the row.</returns>
-    public QueryResult<BaseItemDto> GetResults(object? payload)
+    public QueryResult<BaseItemDto> GetResults(HomeScreenSectionPayload payload)
     {
         try
         {
-            var sectionId = ReadProperty(payload, "AdditionalData") as string;
-            var userId = ParseGuid(ReadProperty(payload, "UserId"));
+            var sectionId = payload?.AdditionalData;
 
             if (string.IsNullOrWhiteSpace(sectionId))
             {
+                _logger?.LogWarning("[ProviderSections] Section payload carried no section id");
                 return Empty();
             }
 
-            var configuration = Plugin.Instance?.Configuration;
-            var section = configuration?.Sections
+            var section = Plugin.Instance?.Configuration.Sections
                 .FirstOrDefault(s => string.Equals(s.Id, sectionId, StringComparison.OrdinalIgnoreCase));
 
             if (section is null || !section.Enabled)
@@ -71,33 +64,37 @@ public class SectionResultsProvider
                 return Empty();
             }
 
-            var user = userId != Guid.Empty ? _userManager.GetUserById(userId) : null;
+            var user = payload!.UserId != Guid.Empty
+                ? _userManager.GetUserById(payload.UserId)
+                : null;
 
             var builder = PluginServiceLocator.Get<ISectionContentBuilder>();
             if (builder is null)
             {
                 _logger?.LogWarning(
-                    "[ProviderSections] Section content builder is not available yet, returning an empty row for {Id}",
+                    "[ProviderSections] Content builder unavailable, returning an empty row for {Id}",
                     sectionId);
                 return Empty();
             }
 
             // HSS's call path is synchronous, so the async work is bridged here
-            // rather than leaking a sync-over-async pattern into the builder.
+            // rather than leaking sync-over-async into the builder itself.
             var items = builder
                 .BuildAsync(section, user, CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
 
-            return new QueryResult<BaseItemDto>(
-                0,
-                items.Count,
-                items.ToArray());
+            _logger?.LogInformation(
+                "[ProviderSections] Section {Name} returned {Count} item(s)",
+                section.DisplayName,
+                items.Count);
+
+            return new QueryResult<BaseItemDto>(0, items.Count, items.ToArray());
         }
         catch (Exception ex)
         {
-            // Never throw into HSS: a failing row must degrade to an empty row,
-            // not break the whole home screen for the user.
+            // Never throw into HSS: one failing row must not break the whole
+            // home screen for the user.
             _logger?.LogError(ex, "[ProviderSections] Failed to build section results");
             return Empty();
         }
@@ -105,25 +102,4 @@ public class SectionResultsProvider
 
     private static QueryResult<BaseItemDto> Empty()
         => new(0, 0, Array.Empty<BaseItemDto>());
-
-    private static object? ReadProperty(object? source, string propertyName)
-    {
-        if (source is null)
-        {
-            return null;
-        }
-
-        var property = source.GetType().GetProperty(
-            propertyName,
-            BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
-
-        return property?.GetValue(source);
-    }
-
-    private static Guid ParseGuid(object? value) => value switch
-    {
-        Guid guid => guid,
-        string text when Guid.TryParse(text, out var parsed) => parsed,
-        _ => Guid.Empty,
-    };
 }

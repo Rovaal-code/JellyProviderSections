@@ -74,7 +74,7 @@ public class PublicController : ControllerBase
             status4k = (mediaInfo?.Status4k ?? SeerrMediaStatus.Unknown).ToString(),
             seasons = mediaInfo?.Seasons.Select(s => new
             {
-                s.SeasonNumber,
+                seasonNumber = s.SeasonNumber,
                 status = s.Status.ToString(),
                 status4k = s.Status4k.ToString(),
             }),

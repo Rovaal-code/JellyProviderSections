@@ -75,11 +75,15 @@ public interface ITmdbApiClient
 }
 
 /// <summary>
-/// Outcome of a TMDb connection test.
+/// Outcome of a TMDb connection test. Property names are pinned to camelCase so
+/// the payload matches the rest of this plugin's API; without the attributes a
+/// record serializes PascalCase and the frontend silently reads undefined.
 /// </summary>
 /// <param name="Success">Whether the connection succeeded.</param>
 /// <param name="Message">A human-readable message, sanitized of any secret.</param>
-public record TmdbConnectionResult(bool Success, string Message);
+public record TmdbConnectionResult(
+    [property: System.Text.Json.Serialization.JsonPropertyName("success")] bool Success,
+    [property: System.Text.Json.Serialization.JsonPropertyName("message")] string Message);
 
 /// <summary>
 /// A downloaded image.

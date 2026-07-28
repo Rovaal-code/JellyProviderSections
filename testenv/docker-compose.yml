@@ -1,0 +1,68 @@
+# Isolated test environment for the Jellyfin Provider Sections plugin.
+#
+# Every tag below was verified to exist with a real `docker pull` on 2026-07-29,
+# not assumed. Never use `latest` here: a silently moving base version makes
+# "it worked yesterday" impossible to reason about.
+#
+#   jellyfin/jellyfin:10.11.11        digest sha256:aefb67e6a7ff1debdd154a78a7bbb780fd0c873d8639210a7f6a2016ad2b35db
+#   ghcr.io/seerr-team/seerr:v3.4.0   digest sha256:d206d9e4056bb90178297df58047791196e7721e6dc19384579b0530702fe086
+#
+# Seerr's tags carry a `v` prefix (`v3.4.0`); the bare `3.4.0` does not exist.
+
+name: jellyprovidersections-testenv
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.11
+    container_name: jps-jellyfin
+    user: "${JPS_UID:-1000}:${JPS_GID:-1000}"
+    ports:
+      - "8096:8096"
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - ./jellyfin/media:/media:ro
+    environment:
+      - TZ=Europe/Madrid
+      # Advertised base URL, so the web client builds correct absolute links.
+      - JELLYFIN_PublishedServerUrl=http://localhost:8096
+    healthcheck:
+      # /health is Jellyfin's own liveness endpoint and needs no authentication.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8096/health || exit 1"]
+      start_period: 40s
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - jps-net
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:v3.4.0
+    container_name: jps-seerr
+    # Node needs a real init to reap zombies; without this the container
+    # accumulates defunct processes over long test sessions.
+    init: true
+    ports:
+      - "5055:5055"
+    volumes:
+      - ./seerr/config:/app/config
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=Europe/Madrid
+      - PORT=5055
+    healthcheck:
+      # Public settings endpoint: reachable before any user is configured,
+      # which matters because the container is healthy long before setup.
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1"]
+      start_period: 20s
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - jps-net
+
+networks:
+  jps-net:
+    driver: bridge

@@ -202,11 +202,17 @@ public enum SeerrRequestOutcome
 /// </summary>
 /// <param name="Outcome">What happened.</param>
 /// <param name="Message">A user-facing message, sanitized of secrets.</param>
-public record SeerrRequestResult(SeerrRequestOutcome Outcome, string Message);
+public record SeerrRequestResult(
+    [property: JsonPropertyName("outcome")] SeerrRequestOutcome Outcome,
+    [property: JsonPropertyName("message")] string Message);
 
 /// <summary>
-/// Outcome of a Seerr connection test.
+/// Outcome of a Seerr connection test. Property names are pinned to camelCase
+/// so the payload matches the rest of this plugin's API; a bare record
+/// serializes PascalCase and the frontend would read undefined.
 /// </summary>
 /// <param name="Success">Whether the connection succeeded.</param>
 /// <param name="Message">A human-readable message, sanitized of secrets.</param>
-public record SeerrConnectionResult(bool Success, string Message);
+public record SeerrConnectionResult(
+    [property: JsonPropertyName("success")] bool Success,
+    [property: JsonPropertyName("message")] string Message);

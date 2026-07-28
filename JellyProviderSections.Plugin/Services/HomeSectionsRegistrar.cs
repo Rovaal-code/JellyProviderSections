@@ -159,7 +159,10 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             ["displayText"] = DisplayTextBuilder.Build(section),
             ["limit"] = 1,
             ["additionalData"] = section.Id,
-            ["resultsAssembly"] = typeof(HomeSectionsRegistrar).Assembly.GetName().Name,
+            // Must be the FULL assembly name including version and culture: HSS
+            // matches it with `Assembly.FullName == payload.ResultsAssembly`, so
+            // the short name silently finds nothing and the row renders empty.
+            ["resultsAssembly"] = typeof(HomeSectionsRegistrar).Assembly.FullName,
             ["resultsClass"] = typeof(SectionResultsProvider).FullName,
             ["resultsMethod"] = nameof(SectionResultsProvider.GetResults),
         };

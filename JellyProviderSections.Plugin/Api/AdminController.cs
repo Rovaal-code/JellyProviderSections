@@ -69,19 +69,19 @@ public class AdminController : ControllerBase
         // versus "not configured" without ever holding the value.
         return Ok(new
         {
-            config.SchemaVersion,
-            Tmdb = new
+            schemaVersion = config.SchemaVersion,
+            tmdb = new
             {
-                config.TmdbSettings.Enabled,
-                HasApiKey = !string.IsNullOrWhiteSpace(config.TmdbSettings.ApiKey),
+                enabled = config.TmdbSettings.Enabled,
+                hasApiKey = !string.IsNullOrWhiteSpace(config.TmdbSettings.ApiKey),
             },
-            Seerr = new
+            seerr = new
             {
-                config.SeerrSettings.Enabled,
-                config.SeerrSettings.ServerUrl,
-                config.SeerrSettings.IgnoreSslErrors,
-                config.SeerrSettings.AllowIgnoreQuota,
-                HasApiKey = !string.IsNullOrWhiteSpace(config.SeerrSettings.ApiKey),
+                enabled = config.SeerrSettings.Enabled,
+                serverUrl = config.SeerrSettings.ServerUrl,
+                ignoreSslErrors = config.SeerrSettings.IgnoreSslErrors,
+                allowIgnoreQuota = config.SeerrSettings.AllowIgnoreQuota,
+                hasApiKey = !string.IsNullOrWhiteSpace(config.SeerrSettings.ApiKey),
             },
         });
     }
@@ -411,11 +411,11 @@ public class AdminController : ControllerBase
             count = results.Count,
             items = results.Take(12).Select(r => new
             {
-                r.Id,
+                id = r.Id,
                 title = r.Title,
                 year = r.ReleaseDate?.Length >= 4 ? r.ReleaseDate[..4] : null,
-                r.VoteAverage,
-                r.PosterPath,
+                voteAverage = r.VoteAverage,
+                posterPath = r.PosterPath,
             }),
         });
     }
@@ -574,36 +574,41 @@ public class AdminController : ControllerBase
     private static string? NullIfBlank(string? value)
         => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
+    /// <summary>
+    /// Every property is named explicitly in camelCase. Shorthand members
+    /// (section.Id) would serialize as PascalCase while named ones stay as
+    /// written, producing a mixed-casing payload the frontend cannot rely on.
+    /// </summary>
     private static object ToDto(SectionDefinition section, bool hssAvailable, bool seerrConfigured) => new
     {
-        section.Id,
-        section.DisplayName,
-        section.Enabled,
-        section.OrderHint,
-        section.TmdbProviderId,
-        section.ProviderDisplayName,
-        section.ProviderLogoPath,
+        id = section.Id,
+        displayName = section.DisplayName,
+        enabled = section.Enabled,
+        orderHint = section.OrderHint,
+        tmdbProviderId = section.TmdbProviderId,
+        providerDisplayName = section.ProviderDisplayName,
+        providerLogoPath = section.ProviderLogoPath,
         contentType = section.ContentType.ToString(),
-        section.Region,
-        section.MetadataLanguage,
+        region = section.Region,
+        metadataLanguage = section.MetadataLanguage,
         sortBy = section.SortBy.ToString(),
-        section.MaxItems,
-        section.IncludeGenreIds,
-        section.ExcludeGenreIds,
-        section.OriginalLanguage,
-        section.OriginCountry,
-        section.MinDate,
-        section.MaxDate,
-        section.MinRating,
-        section.MinVoteCount,
-        section.IncludeAdult,
-        section.RequestsEnabled,
-        section.CacheDurationMinutes,
-        section.CreatedUtc,
-        section.ModifiedUtc,
-        section.LastSyncUtc,
+        maxItems = section.MaxItems,
+        includeGenreIds = section.IncludeGenreIds,
+        excludeGenreIds = section.ExcludeGenreIds,
+        originalLanguage = section.OriginalLanguage,
+        originCountry = section.OriginCountry,
+        minDate = section.MinDate,
+        maxDate = section.MaxDate,
+        minRating = section.MinRating,
+        minVoteCount = section.MinVoteCount,
+        includeAdult = section.IncludeAdult,
+        requestsEnabled = section.RequestsEnabled,
+        cacheDurationMinutes = section.CacheDurationMinutes,
+        createdUtc = section.CreatedUtc,
+        modifiedUtc = section.ModifiedUtc,
+        lastSyncUtc = section.LastSyncUtc,
         lastSyncResult = section.LastSyncResult.ToString(),
-        section.LastError,
+        lastError = section.LastError,
         homeSectionsRegistered = hssAvailable && section.Enabled,
         seerrConnected = seerrConfigured,
         logoUrl = DisplayTextBuilder.BuildLogoUrl(section.TmdbProviderId),
