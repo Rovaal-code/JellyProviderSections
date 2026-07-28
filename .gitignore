@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+dist/
+releases/
+
+# .NET
+*.user
+.vs/
+
+# Secrets, never commit real tokens/keys
+.env
+*.local.json
+
+# OS
+.DS_Store

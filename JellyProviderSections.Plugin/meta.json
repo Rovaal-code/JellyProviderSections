@@ -1,0 +1,12 @@
+{
+  "category": "Metadata",
+  "description": "Creates dynamic home screen sections based on TMDb streaming providers, with local library resolution and Seerr requests.",
+  "guid": "05cac539-35ae-4f0d-be40-5f0eabd7f43c",
+  "imageUrl": "",
+  "name": "Jellyfin Provider Sections",
+  "overview": "Lets an administrator create provider-based streaming sections (e.g. \"Popular on Crunchyroll\") for the Jellyfin home screen, backed by TMDb Discover, resolved against the local library, with Seerr request support.",
+  "owner": "",
+  "targetAbi": "10.11.0.0",
+  "timestamp": "2026-07-28T00:00:00Z",
+  "version": "0.0.1.0"
+}

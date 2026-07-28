@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>Jellyfin.Plugin.JellyProviderSections</RootNamespace>
+    <AssemblyName>JellyProviderSections.Plugin</AssemblyName>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1591</NoWarn>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.11" PrivateAssets="All" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.11" PrivateAssets="All" />
+  </ItemGroup>
+
+  <!-- Configuration page HTML -->
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\*.html" />
+  </ItemGroup>
+
+  <!-- Web assets (JS + CSS for the config page) -->
+  <ItemGroup>
+    <EmbeddedResource Include="Web\**\*" />
+  </ItemGroup>
+
+</Project>
