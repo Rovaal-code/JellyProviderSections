@@ -4,11 +4,11 @@ Creates dynamic Jellyfin home screen sections based on TMDb streaming providers 
 
 Sibling project of [JellyNotify](https://github.com/Rovaal-code/JellyNotify): same visual language, separate codebase, distributed through JellyNotify's shared plugin repository manifest.
 
-Status: early skeleton (phase 3 of the implementation plan). Full design and rationale, with real source code cited from every dependency, in JellyNotify's repository:
+Status: early skeleton (phase 3 of the implementation plan). Full design and rationale, with real source code cited from every dependency, lives in this repository:
 
 ```text
-jellyfinnotify/JellyNotify/docs/provider-sections/research/          — technical investigation
-jellyfinnotify/JellyNotify/docs/provider-sections/implementation/     — implementation plan, start at master-implementation-plan.md
+docs/research/          — technical investigation (12 documents)
+docs/implementation/    — implementation plan, start at master-implementation-plan.md
 ```
 
 ## Build
