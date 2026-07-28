@@ -127,3 +127,39 @@ junto al título.
   docker run --rm -v "$PWD:/src" -w /src alpine:3 \
       sh -c 'rm -rf */obj */bin dist'
   ```
+
+## Verificación end-to-end realizada (2026-07-29)
+
+Todo lo siguiente se ejecutó contra el entorno real de esta carpeta, no en tests unitarios.
+
+| Comprobación | Resultado |
+|---|---|
+| Jellyfin 10.11.11 + HSS 2.5.11.0 + File Transformation 2.5.11.0 | Cargan sin errores |
+| Plugin carga y registra sus secciones | 3 secciones registradas |
+| UUID y posición sobreviven a reinicio | Mismos ids tras reiniciar |
+| Consulta Discover real | 60 títulos de Crunchyroll España, en español |
+| Logo del proveedor | JPEG 92x92 servido y cacheado desde TMDb |
+| Logo en el título de sección | `<img>` presente en el displayText que sirve HSS |
+| Escape de HTML en el nombre (XSS) | `<script>` llega como `&lt;script&gt;` |
+| Resolución local | Un título de la biblioteca vuelve como ítem real con UserData |
+| Conexión Seerr | Correcta |
+| Crear solicitud (serie y película) | Creada y atribuida al usuario Jellyfin correcto |
+| Duplicados | 409 y 202 manejados como estados, no como error |
+
+### Configurar Seerr por API
+
+Su asistente espera el host y el puerto por separado, y `urlBase` vacío explícito
+(si se omite, lo concatena literalmente como "undefined"):
+
+```bash
+curl -X POST http://localhost:5055/api/v1/auth/jellyfin \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"...","hostname":"jps-jellyfin","port":8096,"useSsl":false,"urlBase":"","email":"admin@test.local","serverType":2}'
+```
+
+### Habilitar Modular Home
+
+Home Screen Sections viene con `Enabled=false` y su lista de secciones vacía, y
+en ese estado su endpoint `/HomeScreen/Sections` devuelve 500 (hace un `Max`
+sobre una secuencia vacía). Hay que activarlo y añadir una entrada por sección
+en su propia configuración antes de que las filas aparezcan.
