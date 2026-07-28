@@ -53,11 +53,13 @@ public class TmdbSettings
     public bool Enabled { get; set; }
 
     /// <summary>
-    /// Gets or sets the TMDb API Read Access Token (Bearer). Never sent back to
-    /// the frontend once saved — see PreserveSecrets pattern, added in the phase
-    /// that implements the admin config endpoints.
+    /// Gets or sets the TMDb API Key (v3 auth, sent as the "api_key" query string
+    /// parameter). Decision 2026-07-29: v3 key instead of the v4 Bearer Read
+    /// Access Token originally proposed, same endpoint coverage, simpler auth.
+    /// Never sent back to the frontend once saved, see PreserveSecrets pattern,
+    /// added in the phase that implements the admin config endpoints.
     /// </summary>
-    public string ApiReadAccessToken { get; set; } = string.Empty;
+    public string ApiKey { get; set; } = string.Empty;
 }
 
 /// <summary>
