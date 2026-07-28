@@ -29,7 +29,7 @@ Incluye: gestión completa de definiciones de sección (crear/editar/duplicar/ac
 - Modo mixto películas+series en una misma fila (decisión ya confirmada: se excluye por no existir un algoritmo de mezcla suficientemente determinista, ver `research/05` §Películas y series combinadas).
 - Soporte de clientes Jellyfin distintos de Jellyfin Web de escritorio/navegador (es el único cliente que renderiza Home Screen Sections de forma nativa hoy).
 - Modificación del código de JellyNotify o de cualquiera de los plugins de terceros (HSS, File Transformation, Pages, Jellyfin Enhanced) — solo integración en tiempo de ejecución.
-- Instancia de producción real de Jellyfin/Seerr — todo el desarrollo y prueba ocurre en el entorno aislado `/home/alvaro/Descargas/jellyprovidersections`.
+- Instancia de producción real de Jellyfin/Seerr — todo el desarrollo y prueba ocurre en el entorno aislado `testenv/` (dentro de este repo).
 
 ## Clasificación de funciones (MVP obligatorio / versión inicial recomendable / extensión posterior)
 

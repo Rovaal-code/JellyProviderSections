@@ -1,16 +1,342 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
+    <meta charset="UTF-8">
     <title>Jellyfin Provider Sections</title>
 </head>
 <body>
-    <div id="ProviderSectionsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button">
-        <div data-role="content">
-            <div class="content-primary">
-                <h1>Jellyfin Provider Sections</h1>
-                <p>Configuration UI placeholder — implemented in a later phase (see docs/provider-sections/implementation/05-ui-and-interaction-specification.md). This phase-3 skeleton only verifies the plugin loads and its page is reachable.</p>
+<div data-role="page" class="page type-interior pluginConfigurationPage" id="jps-config-page"
+     data-require="emby-input,emby-checkbox,emby-select,emby-button">
+    <script>
+        // Relative <link>/<script src> tags resolve against the plugin-page iframe
+        // URL, not this plugin's resource namespace, and 404 silently (the page
+        // then renders as unstyled HTML). Everything is loaded through
+        // ApiClient.getUrl(...) instead. See docs/research/02-local-project-analysis.md.
+        (function () {
+            var cssLink = document.createElement('link');
+            cssLink.rel = 'stylesheet';
+            cssLink.href = ApiClient.getUrl('/JellyProviderSections/Configuration/configPage.css');
+            document.head.appendChild(cssLink);
+        })();
+    </script>
+
+    <div data-role="content">
+        <div class="content-primary">
+
+            <div class="verticalSection jps-header">
+                <span class="material-icons jps-header-icon" aria-hidden="true">video_library</span>
+                <div>
+                    <h1 class="sectionTitle jps-title">Provider Sections</h1>
+                    <p class="jps-subtitle">Secciones de la página principal por proveedor de streaming, con datos de TMDb y solicitudes vía Seerr.</p>
+                </div>
+                <span class="material-icons jps-header-icon" aria-hidden="true">live_tv</span>
             </div>
+
+            <div class="jps-tabs" role="tablist" aria-label="Secciones de configuración">
+                <button type="button" class="jps-tab-btn active" data-tab="sections" role="tab" aria-selected="true">
+                    <span class="material-icons jps-tab-icon" aria-hidden="true">dashboard</span>
+                    <span>Secciones</span>
+                </button>
+                <button type="button" class="jps-tab-btn" data-tab="connections" role="tab" aria-selected="false">
+                    <span class="material-icons jps-tab-icon" aria-hidden="true">link</span>
+                    <span>Conexiones</span>
+                </button>
+                <button type="button" class="jps-tab-btn" data-tab="diagnostics" role="tab" aria-selected="false">
+                    <span class="material-icons jps-tab-icon" aria-hidden="true">troubleshoot</span>
+                    <span>Diagnóstico</span>
+                </button>
+            </div>
+
+            <!-- ═══ Secciones ═══════════════════════════════════════ -->
+            <div class="jps-tab-panel" data-panel="sections">
+
+                <div class="jps-toolbar">
+                    <div class="jps-toolbar-left">
+                        <button type="button" class="jps-btn jps-btn-primary" id="jps-new-section">
+                            <span class="material-icons jps-btn-icon" aria-hidden="true">add</span>
+                            <span>Nueva sección</span>
+                        </button>
+                        <button type="button" class="jps-btn" id="jps-collapse-all">
+                            <span class="material-icons jps-btn-icon" aria-hidden="true">unfold_less</span>
+                            <span>Colapsar todo</span>
+                        </button>
+                        <button type="button" class="jps-btn" id="jps-refresh-sections">
+                            <span class="material-icons jps-btn-icon" aria-hidden="true">refresh</span>
+                            <span>Actualizar</span>
+                        </button>
+                    </div>
+                    <span class="jps-count" id="jps-section-count"></span>
+                </div>
+
+                <!-- ── Formulario de creación / edición ── -->
+                <div class="jps-card jps-card-padded jps-hidden" id="jps-form-panel">
+                    <h2 class="jps-card-title" id="jps-form-title">Nueva sección</h2>
+
+                    <div class="jps-form-grid">
+                        <div class="jps-form-field jps-span-full">
+                            <label class="jps-label" for="jps-f-name">Nombre de la sección</label>
+                            <input class="jps-input" type="text" id="jps-f-name" maxlength="80"
+                                   placeholder="Popular en Crunchyroll">
+                            <span class="jps-hint">Es el título que se verá en la página principal, con el logo del proveedor a su izquierda.</span>
+                        </div>
+
+                        <div class="jps-form-field">
+                            <label class="jps-label" for="jps-f-contenttype">Tipo de contenido</label>
+                            <select class="jps-select" id="jps-f-contenttype">
+                                <option value="Series">Series</option>
+                                <option value="Movie">Películas</option>
+                            </select>
+                        </div>
+
+                        <div class="jps-form-field">
+                            <label class="jps-label" for="jps-f-region">Región</label>
+                            <select class="jps-select" id="jps-f-region">
+                                <option value="ES">España (ES)</option>
+                            </select>
+                            <span class="jps-hint">Determina qué catálogo de proveedor se consulta.</span>
+                        </div>
+
+                        <div class="jps-form-field jps-span-full">
+                            <label class="jps-label" for="jps-f-providersearch">Proveedor</label>
+                            <input class="jps-input" type="search" id="jps-f-providersearch"
+                                   placeholder="Buscar proveedor por nombre..."
+                                   aria-label="Buscar proveedor por nombre">
+                            <div class="jps-provider-chosen jps-hidden" id="jps-provider-chosen"></div>
+                            <div class="jps-provider-list" id="jps-provider-list" role="listbox"
+                                 aria-label="Proveedores disponibles"></div>
+                        </div>
+                    </div>
+
+                    <details class="jps-advanced">
+                        <summary>Filtros avanzados</summary>
+                        <div class="jps-advanced-body jps-form-grid">
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-sortby">Ordenación</label>
+                                <select class="jps-select" id="jps-f-sortby">
+                                    <option value="Popularity">Popularidad</option>
+                                    <option value="RatingDesc">Mejor valoradas</option>
+                                    <option value="ReleaseDateDesc">Más recientes</option>
+                                    <option value="TitleAsc">Título (A-Z)</option>
+                                </select>
+                                <span class="jps-hint">Popularidad usa la métrica de TMDb, no un ranking oficial del proveedor.</span>
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-maxitems">Máximo de elementos</label>
+                                <input class="jps-input" type="number" id="jps-f-maxitems" min="1" max="200" value="20">
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-language">Idioma de metadatos</label>
+                                <input class="jps-input" type="text" id="jps-f-language" value="es-ES" placeholder="es-ES">
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-cache">Duración de caché (minutos)</label>
+                                <input class="jps-input" type="number" id="jps-f-cache" min="5" max="10080" value="360">
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-includegenres">Géneros incluidos</label>
+                                <input class="jps-input" type="text" id="jps-f-includegenres" placeholder="16, 10759">
+                                <span class="jps-hint">IDs de género de TMDb separados por comas.</span>
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-excludegenres">Géneros excluidos</label>
+                                <input class="jps-input" type="text" id="jps-f-excludegenres" placeholder="99">
+                                <span class="jps-hint">IDs de género de TMDb separados por comas.</span>
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-origlang">Idioma original</label>
+                                <input class="jps-input" type="text" id="jps-f-origlang" placeholder="ja">
+                                <span class="jps-hint">Código ISO 639-1, por ejemplo "ja" para japonés.</span>
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-origcountry">País de origen</label>
+                                <input class="jps-input" type="text" id="jps-f-origcountry" placeholder="JP">
+                                <span class="jps-hint">Código ISO 3166-1, por ejemplo "JP" para Japón.</span>
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-mindate">Fecha mínima</label>
+                                <input class="jps-input" type="date" id="jps-f-mindate">
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-maxdate">Fecha máxima</label>
+                                <input class="jps-input" type="date" id="jps-f-maxdate">
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-minrating">Valoración mínima</label>
+                                <input class="jps-input" type="number" id="jps-f-minrating" min="0" max="10" step="0.1" placeholder="7">
+                            </div>
+
+                            <div class="jps-form-field">
+                                <label class="jps-label" for="jps-f-minvotes">Votos mínimos</label>
+                                <input class="jps-input" type="number" id="jps-f-minvotes" min="0" value="50">
+                                <span class="jps-hint">Evita que títulos con muy pocos votos dominen las listas ordenadas por valoración.</span>
+                            </div>
+
+                            <div class="jps-form-field jps-span-full">
+                                <label class="jps-toggle">
+                                    <input type="checkbox" id="jps-f-adult">
+                                    <span class="jps-toggle-slider"></span>
+                                    <span class="jps-toggle-label">Incluir contenido para adultos</span>
+                                </label>
+                            </div>
+
+                            <div class="jps-form-field jps-span-full">
+                                <label class="jps-toggle">
+                                    <input type="checkbox" id="jps-f-requests" checked>
+                                    <span class="jps-toggle-slider"></span>
+                                    <span class="jps-toggle-label">Permitir solicitar contenido que no esté en la biblioteca</span>
+                                </label>
+                            </div>
+                        </div>
+                    </details>
+
+                    <label class="jps-toggle">
+                        <input type="checkbox" id="jps-f-enabled" checked>
+                        <span class="jps-toggle-slider"></span>
+                        <span class="jps-toggle-label">Sección activa</span>
+                    </label>
+
+                    <div class="jps-result jps-hidden" id="jps-form-result" role="status" aria-live="polite"></div>
+
+                    <div class="jps-btn-row">
+                        <button type="button" class="jps-btn jps-btn-primary" id="jps-form-save">
+                            <span class="material-icons jps-btn-icon" aria-hidden="true">save</span>
+                            <span>Guardar sección</span>
+                        </button>
+                        <button type="button" class="jps-btn" id="jps-form-test">
+                            <span class="material-icons jps-btn-icon" aria-hidden="true">play_arrow</span>
+                            <span>Probar consulta</span>
+                        </button>
+                        <button type="button" class="jps-btn" id="jps-form-cancel">
+                            <span class="material-icons jps-btn-icon" aria-hidden="true">close</span>
+                            <span>Cancelar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ── Lista de secciones ── -->
+                <div id="jps-sections-list"></div>
+
+            </div>
+
+            <!-- ═══ Conexiones ══════════════════════════════════════ -->
+            <div class="jps-tab-panel jps-hidden" data-panel="connections">
+
+                <div class="jps-state" id="jps-connections-loading">
+                    <div class="jps-spinner"></div>
+                    <p class="jps-state-text">Cargando configuración...</p>
+                </div>
+
+                <div class="jps-hidden" id="jps-connections-body">
+                    <div class="jps-card jps-card-padded">
+                        <h2 class="jps-card-title">TMDb</h2>
+                        <p class="jps-hint">Origen del catálogo de proveedores y de las listas de contenido. Necesitas una clave de API gratuita de themoviedb.org (Configuración, apartado API).</p>
+
+                        <label class="jps-toggle">
+                            <input type="checkbox" id="jps-tmdb-enabled">
+                            <span class="jps-toggle-slider"></span>
+                            <span class="jps-toggle-label">Activar la integración con TMDb</span>
+                        </label>
+
+                        <div class="jps-form-field">
+                            <label class="jps-label" for="jps-tmdb-key">Clave de API</label>
+                            <input class="jps-input" type="password" id="jps-tmdb-key" autocomplete="off"
+                                   placeholder="Sin configurar">
+                            <span class="jps-hint">Se guarda solo en el servidor. Nunca se envía al navegador ni aparece en los registros.</span>
+                        </div>
+
+                        <div class="jps-btn-row">
+                            <button type="button" class="jps-btn" id="jps-tmdb-test">
+                                <span class="material-icons jps-btn-icon" aria-hidden="true">wifi_tethering</span>
+                                <span>Probar conexión</span>
+                            </button>
+                        </div>
+                        <div class="jps-result jps-hidden" id="jps-tmdb-result" role="status" aria-live="polite"></div>
+                    </div>
+
+                    <div class="jps-card jps-card-padded">
+                        <h2 class="jps-card-title">Seerr</h2>
+                        <p class="jps-hint">Opcional. Permite que los usuarios soliciten el contenido que todavía no está en la biblioteca. Sin Seerr, las secciones siguen funcionando en modo solo lectura.</p>
+
+                        <label class="jps-toggle">
+                            <input type="checkbox" id="jps-seerr-enabled">
+                            <span class="jps-toggle-slider"></span>
+                            <span class="jps-toggle-label">Activar la integración con Seerr</span>
+                        </label>
+
+                        <div class="jps-form-field">
+                            <label class="jps-label" for="jps-seerr-url">URL del servidor</label>
+                            <input class="jps-input" type="url" id="jps-seerr-url" placeholder="http://localhost:5055">
+                        </div>
+
+                        <div class="jps-form-field">
+                            <label class="jps-label" for="jps-seerr-key">Clave de API</label>
+                            <input class="jps-input" type="password" id="jps-seerr-key" autocomplete="off"
+                                   placeholder="Sin configurar">
+                            <span class="jps-hint">Se guarda solo en el servidor. Nunca se envía al navegador ni aparece en los registros.</span>
+                        </div>
+
+                        <label class="jps-toggle">
+                            <input type="checkbox" id="jps-seerr-ssl">
+                            <span class="jps-toggle-slider"></span>
+                            <span class="jps-toggle-label">Ignorar errores de certificado SSL</span>
+                        </label>
+
+                        <label class="jps-toggle">
+                            <input type="checkbox" id="jps-seerr-quota">
+                            <span class="jps-toggle-slider"></span>
+                            <span class="jps-toggle-label">Permitir saltarse la cuota del usuario (Seerr 3.4.0 o superior)</span>
+                        </label>
+
+                        <div class="jps-btn-row">
+                            <button type="button" class="jps-btn" id="jps-seerr-test">
+                                <span class="material-icons jps-btn-icon" aria-hidden="true">wifi_tethering</span>
+                                <span>Probar conexión</span>
+                            </button>
+                        </div>
+                        <div class="jps-result jps-hidden" id="jps-seerr-result" role="status" aria-live="polite"></div>
+                    </div>
+
+                    <div class="jps-result jps-hidden" id="jps-config-result" role="status" aria-live="polite"></div>
+
+                    <div class="jps-btn-row">
+                        <button type="button" class="jps-btn jps-btn-primary" id="jps-config-save">
+                            <span class="material-icons jps-btn-icon" aria-hidden="true">save</span>
+                            <span>Guardar configuración</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ Diagnóstico ═════════════════════════════════════ -->
+            <div class="jps-tab-panel jps-hidden" data-panel="diagnostics">
+                <div id="jps-diagnostics-body"></div>
+            </div>
+
+            <p class="jps-attribution">
+                Este producto usa la API de TMDb, pero no está avalado ni certificado por TMDb.
+                Los datos de disponibilidad por plataforma proceden de JustWatch a través de TMDb.
+            </p>
+
         </div>
+
+        <script>
+            (function () {
+                var script = document.createElement('script');
+                script.src = ApiClient.getUrl('/JellyProviderSections/Configuration/configPage.js');
+                document.body.appendChild(script);
+            })();
+        </script>
     </div>
+</div>
 </body>
 </html>

@@ -12,5 +12,12 @@ releases/
 .env
 *.local.json
 
+# Test environment: persistent container state and evidence, local by nature
+testenv/jellyfin/config/
+testenv/jellyfin/cache/
+testenv/jellyfin/media/
+testenv/seerr/config/
+testenv/evidence/
+
 # OS
 .DS_Store

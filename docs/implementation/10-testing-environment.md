@@ -1,11 +1,11 @@
 # 10 — Entorno de pruebas aislado
 
-Ubicación: `/home/alvaro/Descargas/jellyprovidersections` (confirmada vacía al inicio de esta investigación). Completamente separado del código fuente (`/home/alvaro/Descargas/JellyProviderSections`, nuevo repo) y de `/home/alvaro/Descargas/jellyfinnotify/JellyNotify` (solo referencia visual/catálogo). Ninguna instancia de producción se usa ni se modifica en ningún punto.
+Ubicación: `testenv/` **dentro de este mismo repositorio** (decisión del usuario 2026-07-29: unificar código y entorno de pruebas en un solo sitio, en vez de dos carpetas hermanas de nombre casi idéntico). El estado persistente de los contenedores, las evidencias y el `.env` con el token de TMDb están en `.gitignore`. Ninguna instancia de producción se usa ni se modifica en ningún punto.
 
 ## Estructura propuesta
 
 ```
-jellyprovidersections/
+testenv/
 ├── docker-compose.yml
 ├── .env.example                     # sin valores reales; .env real gitignored
 ├── jellyfin/

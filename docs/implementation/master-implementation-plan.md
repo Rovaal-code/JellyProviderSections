@@ -60,7 +60,7 @@ JellyProviderSections/
 
 **Manifest de distribución**: sigue siendo `repository/manifest.json` de JellyNotify, ampliado con una segunda entrada que apunta a los releases de este nuevo repo — no se crea infraestructura de catálogo nueva (ver `13-packaging-and-release.md`).
 
-**Entorno de pruebas**: `/home/alvaro/Descargas/jellyprovidersections` (ya existente, vacío), completamente separado de ambos repos de código — ver `10-testing-environment.md`.
+**Entorno de pruebas**: `testenv/` (dentro de este repo) (ya existente, vacío), completamente separado de ambos repos de código — ver `10-testing-environment.md`.
 
 ## 6. Componentes, servicios, modelos, interfaces
 

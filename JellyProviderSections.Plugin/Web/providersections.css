@@ -1,0 +1,1044 @@
+/* ================================================================
+   Jellyfin Provider Sections - configuration page styles
+
+   Visual language inherited from JellyNotify (same product family):
+   holographic void background with violet/magenta/cyan accents, glass
+   surfaces, gradient-ring card borders. Prefixed --jps-/.jps- so both
+   plugins can coexist on the same page without colliding.
+
+   Deliberate difference from JellyNotify: system font stack instead of
+   base64-embedded custom fonts (~120KB saved per page load).
+   ================================================================ */
+
+:root {
+    --jps-accent: #a970ff;
+    --jps-accent-hover: #bd94ff;
+    --jps-accent-glow: rgba(169, 112, 255, 0.35);
+    --jps-magenta: #ff5fd8;
+    --jps-cyan: #35e5f0;
+    --jps-bg: #05050b;
+    --jps-surface: rgba(255, 255, 255, 0.045);
+    --jps-surface-2: rgba(255, 255, 255, 0.03);
+    --jps-glass-blur: 20px;
+    --jps-text: #f2f0ff;
+    --jps-text-muted: #a9a2cf;
+    --jps-text-faint: #6c6690;
+    --jps-border: rgba(180, 160, 255, 0.22);
+    --jps-border-strong: rgba(190, 170, 255, 0.4);
+    --jps-success: #38f0b8;
+    --jps-danger: #ff5577;
+    --jps-warning: #ffbb55;
+    --jps-info: #35e5f0;
+    --jps-radius: 16px;
+    --jps-radius-sm: 10px;
+    --jps-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    --jps-transition: 0.2s ease;
+    --jps-font-display: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --jps-font-body: -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ── Utilities ──────────────────────────────────────────────── */
+
+.jps-hidden {
+    display: none !important;
+}
+
+.jps-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus is never removed, only restyled: keyboard navigation is a hard
+   requirement for this page (every card header is a real button). */
+#jps-config-page :focus-visible {
+    outline: 2px solid var(--jps-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+
+.jps-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.jps-header-icon {
+    font-size: 2.2rem;
+    color: var(--jps-accent);
+    flex-shrink: 0;
+}
+
+.jps-title {
+    font-family: var(--jps-font-display);
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--jps-text);
+    margin: 0;
+}
+
+.jps-subtitle {
+    font-size: 0.9rem;
+    color: var(--jps-text-muted);
+    margin: 0.25rem 0 0;
+}
+
+/* ── Tabs ───────────────────────────────────────────────────── */
+
+.jps-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.4rem;
+    margin: 0 auto 1.25rem;
+    width: fit-content;
+    max-width: 100%;
+    background: var(--jps-surface-2);
+    backdrop-filter: blur(var(--jps-glass-blur));
+    -webkit-backdrop-filter: blur(var(--jps-glass-blur));
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius);
+}
+
+.jps-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: transparent;
+    border: none;
+    color: var(--jps-text-muted);
+    padding: 0.55rem 1rem;
+    border-radius: var(--jps-radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--jps-transition);
+    white-space: nowrap;
+}
+
+.jps-tab-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--jps-text);
+}
+
+.jps-tab-btn.active {
+    background: linear-gradient(135deg, var(--jps-accent), var(--jps-cyan));
+    color: #0a0a16;
+    box-shadow: 0 0 18px var(--jps-accent-glow);
+}
+
+.jps-tab-icon {
+    font-size: 1.05rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+/* ── Card (glass surface with gradient ring) ────────────────── */
+
+.jps-card {
+    position: relative;
+    background: var(--jps-surface);
+    backdrop-filter: blur(var(--jps-glass-blur));
+    -webkit-backdrop-filter: blur(var(--jps-glass-blur));
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius);
+    margin-bottom: 1.25rem;
+}
+
+/* Gradient-ring border drawn as a masked pseudo-element so it doesn't
+   fight the 1px border's box model or need a wrapper element. */
+.jps-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--jps-accent), transparent 45%, transparent 55%, var(--jps-cyan));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.jps-card-padded {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.jps-card-title {
+    font-family: var(--jps-font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--jps-text);
+    margin: 0;
+}
+
+/* ── Labeled section divider ────────────────────────────────── */
+
+.jps-subhead {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+}
+
+.jps-subhead::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--jps-border-strong), transparent);
+}
+
+.jps-subhead-label {
+    font-family: var(--jps-font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--jps-cyan);
+    white-space: nowrap;
+}
+
+/* ── Section card: closed state ─────────────────────────────── */
+
+.jps-section-card {
+    position: relative;
+    background: var(--jps-surface);
+    backdrop-filter: blur(var(--jps-glass-blur));
+    -webkit-backdrop-filter: blur(var(--jps-glass-blur));
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius);
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.jps-section-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--jps-accent), transparent 45%, transparent 55%, var(--jps-cyan));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.jps-section-card.jps-disabled {
+    opacity: 0.72;
+}
+
+/* The header is a real <button>: keyboard activation, focus ring, and
+   Enter/Space handling all come for free from the platform. */
+.jps-card-head {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+        "logo name    actions"
+        "logo meta    actions"
+        "logo status  actions";
+    align-items: center;
+    gap: 0.15rem 0.9rem;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: transparent;
+    border: none;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: background var(--jps-transition);
+}
+
+.jps-card-head:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.jps-card-logo {
+    grid-area: logo;
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    align-self: center;
+}
+
+.jps-card-logo-fallback {
+    grid-area: logo;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--jps-text-faint);
+    font-size: 1.15rem;
+    align-self: center;
+}
+
+.jps-card-name {
+    grid-area: name;
+    font-family: var(--jps-font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--jps-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jps-card-meta {
+    grid-area: meta;
+    font-size: 0.82rem;
+    color: var(--jps-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jps-card-status {
+    grid-area: status;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+    font-size: 0.76rem;
+    color: var(--jps-text-faint);
+}
+
+.jps-card-actions {
+    grid-area: actions;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+/* ── Badges and status dots ─────────────────────────────────── */
+
+.jps-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.jps-badge-active {
+    background: rgba(56, 240, 184, 0.14);
+    color: var(--jps-success);
+    border: 1px solid rgba(56, 240, 184, 0.35);
+}
+
+.jps-badge-inactive {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--jps-text-faint);
+    border: 1px solid var(--jps-border);
+}
+
+.jps-status-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.jps-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--jps-text-faint);
+}
+
+.jps-dot-ok {
+    background: var(--jps-success);
+    box-shadow: 0 0 6px rgba(56, 240, 184, 0.6);
+}
+
+.jps-dot-warn {
+    background: var(--jps-warning);
+    box-shadow: 0 0 6px rgba(255, 187, 85, 0.6);
+}
+
+.jps-dot-error {
+    background: var(--jps-danger);
+    box-shadow: 0 0 6px rgba(255, 85, 119, 0.6);
+}
+
+/* ── Chevron ────────────────────────────────────────────────── */
+
+.jps-chevron {
+    color: var(--jps-text-muted);
+    font-size: 1.4rem;
+    transition: transform var(--jps-transition);
+}
+
+.jps-card-head[aria-expanded="true"] .jps-chevron {
+    transform: rotate(180deg);
+}
+
+/* ── Section card: expanded body ────────────────────────────── */
+
+/* grid-template-rows 0fr -> 1fr animates a natural-height block without
+   the max-height guesswork; width never changes, so no layout jump. */
+.jps-card-body-wrap {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--jps-transition);
+}
+
+.jps-card-body-wrap.jps-open {
+    grid-template-rows: 1fr;
+}
+
+.jps-card-body-inner {
+    overflow: hidden;
+}
+
+.jps-card-body {
+    padding: 0 1.25rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    border-top: 1px solid var(--jps-border);
+    margin-top: 0.25rem;
+    padding-top: 1rem;
+}
+
+/* ── Detail grid (field rows in the expanded card) ──────────── */
+
+.jps-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.6rem 1.5rem;
+}
+
+.jps-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.jps-field-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--jps-text-faint);
+}
+
+.jps-field-value {
+    font-size: 0.88rem;
+    color: var(--jps-text);
+    overflow-wrap: anywhere;
+}
+
+.jps-field-value.jps-mono {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    color: var(--jps-text-muted);
+}
+
+.jps-copy-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* Generated TMDb query, read-only debugging aid. */
+.jps-query-box {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    color: var(--jps-cyan);
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius-sm);
+    padding: 0.6rem 0.75rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+
+.jps-btn-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.jps-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    color: var(--jps-text-muted);
+    cursor: pointer;
+    transition: all var(--jps-transition);
+}
+
+.jps-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--jps-text);
+    border-color: var(--jps-border);
+}
+
+.jps-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius-sm);
+    color: var(--jps-text);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--jps-transition);
+}
+
+.jps-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--jps-border-strong);
+}
+
+.jps-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.jps-btn-primary {
+    background: linear-gradient(135deg, var(--jps-accent), var(--jps-cyan));
+    border-color: transparent;
+    color: #0a0a16;
+}
+
+.jps-btn-primary:hover:not(:disabled) {
+    box-shadow: 0 0 18px var(--jps-accent-glow);
+    background: linear-gradient(135deg, var(--jps-accent-hover), var(--jps-cyan));
+}
+
+.jps-btn-danger {
+    color: var(--jps-danger);
+    border-color: rgba(255, 85, 119, 0.35);
+}
+
+.jps-btn-danger:hover:not(:disabled) {
+    background: rgba(255, 85, 119, 0.12);
+}
+
+.jps-btn .jps-btn-icon {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+/* ── Toolbar above the section list ─────────────────────────── */
+
+.jps-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.jps-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.jps-count {
+    font-size: 0.82rem;
+    color: var(--jps-text-muted);
+}
+
+/* ── Forms ──────────────────────────────────────────────────── */
+
+.jps-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.jps-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.jps-form-field.jps-span-full {
+    grid-column: 1 / -1;
+}
+
+.jps-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--jps-text-muted);
+}
+
+.jps-input,
+.jps-select {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius-sm);
+    color: var(--jps-text);
+    font-family: var(--jps-font-body);
+    font-size: 0.9rem;
+    transition: border-color var(--jps-transition);
+}
+
+.jps-input:focus,
+.jps-select:focus {
+    border-color: var(--jps-accent);
+}
+
+.jps-input::placeholder {
+    color: var(--jps-text-faint);
+}
+
+.jps-select option {
+    background: #12121f;
+    color: var(--jps-text);
+}
+
+.jps-hint {
+    font-size: 0.75rem;
+    color: var(--jps-text-faint);
+    line-height: 1.4;
+}
+
+/* Toggle switch */
+.jps-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+}
+
+.jps-toggle input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.jps-toggle-slider {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: background var(--jps-transition);
+    flex-shrink: 0;
+}
+
+.jps-toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform var(--jps-transition);
+}
+
+.jps-toggle input:checked + .jps-toggle-slider {
+    background: var(--jps-accent);
+}
+
+.jps-toggle input:checked + .jps-toggle-slider::after {
+    transform: translateX(20px);
+}
+
+.jps-toggle input:focus-visible + .jps-toggle-slider {
+    outline: 2px solid var(--jps-accent);
+    outline-offset: 2px;
+}
+
+.jps-toggle-label {
+    font-size: 0.88rem;
+    color: var(--jps-text-muted);
+}
+
+/* Collapsible advanced filters */
+.jps-advanced {
+    background: var(--jps-surface-2);
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius-sm);
+    padding: 0.75rem 1rem;
+}
+
+.jps-advanced > summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--jps-text);
+    list-style: none;
+}
+
+.jps-advanced > summary::-webkit-details-marker {
+    display: none;
+}
+
+.jps-advanced > summary::before {
+    content: "▸ ";
+    color: var(--jps-cyan);
+}
+
+.jps-advanced[open] > summary::before {
+    content: "▾ ";
+}
+
+.jps-advanced > summary:focus-visible {
+    outline: 2px solid var(--jps-accent);
+    outline-offset: 2px;
+}
+
+.jps-advanced-body {
+    margin-top: 1rem;
+}
+
+/* ── Provider picker ────────────────────────────────────────── */
+
+.jps-provider-picker {
+    position: relative;
+}
+
+.jps-provider-list {
+    max-height: 240px;
+    overflow-y: auto;
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius-sm);
+    background: rgba(0, 0, 0, 0.3);
+    margin-top: 0.4rem;
+}
+
+.jps-provider-option {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--jps-text);
+    font-size: 0.88rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--jps-transition);
+}
+
+.jps-provider-option:last-child {
+    border-bottom: none;
+}
+
+.jps-provider-option:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.jps-provider-option.jps-selected {
+    background: rgba(169, 112, 255, 0.18);
+    color: var(--jps-text);
+}
+
+.jps-provider-option img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+}
+
+.jps-provider-chosen {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(169, 112, 255, 0.12);
+    border: 1px solid var(--jps-border-strong);
+    border-radius: var(--jps-radius-sm);
+    font-size: 0.88rem;
+}
+
+.jps-provider-chosen img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
+/* ── Result messages ────────────────────────────────────────── */
+
+.jps-result {
+    padding: 0.65rem 0.9rem;
+    border-radius: var(--jps-radius-sm);
+    font-size: 0.85rem;
+    border: 1px solid var(--jps-border);
+    background: var(--jps-surface-2);
+    color: var(--jps-text);
+    overflow-wrap: anywhere;
+}
+
+.jps-result-ok {
+    border-color: rgba(56, 240, 184, 0.4);
+    background: rgba(56, 240, 184, 0.1);
+    color: var(--jps-success);
+}
+
+.jps-result-error {
+    border-color: rgba(255, 85, 119, 0.4);
+    background: rgba(255, 85, 119, 0.1);
+    color: var(--jps-danger);
+}
+
+.jps-result-warn {
+    border-color: rgba(255, 187, 85, 0.4);
+    background: rgba(255, 187, 85, 0.1);
+    color: var(--jps-warning);
+}
+
+/* ── Loading / empty / error states ─────────────────────────── */
+
+/* Nothing on this page is ever allowed to render as a blank panel: an
+   empty container reads as "hung" to the user. Every async region shows
+   a spinner while pending and an explicit empty/error state otherwise. */
+.jps-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.9rem;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background: var(--jps-surface-2);
+    border: 1px dashed var(--jps-border);
+    border-radius: var(--jps-radius);
+}
+
+.jps-state-icon {
+    font-size: 2.6rem;
+    color: var(--jps-text-faint);
+}
+
+.jps-state-title {
+    font-family: var(--jps-font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--jps-text);
+}
+
+.jps-state-text {
+    font-size: 0.88rem;
+    color: var(--jps-text-muted);
+    max-width: 46ch;
+    line-height: 1.5;
+}
+
+.jps-spinner {
+    width: 34px;
+    height: 34px;
+    border: 3px solid rgba(169, 112, 255, 0.2);
+    border-top-color: var(--jps-accent);
+    border-radius: 50%;
+    animation: jps-spin 0.8s linear infinite;
+}
+
+.jps-spinner-sm {
+    width: 16px;
+    height: 16px;
+    border-width: 2px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+@keyframes jps-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .jps-spinner {
+        animation-duration: 2s;
+    }
+
+    .jps-card-body-wrap,
+    .jps-chevron,
+    .jps-btn,
+    .jps-icon-btn {
+        transition: none;
+    }
+}
+
+/* ── Diagnostics ────────────────────────────────────────────── */
+
+.jps-diag-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.9rem;
+}
+
+.jps-diag-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--jps-surface-2);
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius-sm);
+}
+
+.jps-diag-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.jps-diag-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--jps-text-faint);
+}
+
+.jps-diag-value {
+    font-size: 0.88rem;
+    color: var(--jps-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ── Preview grid ───────────────────────────────────────────── */
+
+.jps-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.85rem;
+}
+
+.jps-preview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.jps-preview-poster {
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: var(--jps-radius-sm);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.jps-preview-title {
+    font-size: 0.78rem;
+    color: var(--jps-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jps-preview-tag {
+    font-size: 0.68rem;
+    color: var(--jps-text-faint);
+}
+
+.jps-preview-tag.jps-local {
+    color: var(--jps-success);
+}
+
+/* ── Attribution ────────────────────────────────────────────── */
+
+.jps-attribution {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--jps-border);
+    font-size: 0.75rem;
+    color: var(--jps-text-faint);
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .jps-card-head {
+        grid-template-columns: 32px minmax(0, 1fr);
+        grid-template-areas:
+            "logo name"
+            "logo meta"
+            "status status"
+            "actions actions";
+        gap: 0.35rem 0.7rem;
+        padding: 0.9rem 1rem;
+    }
+
+    .jps-card-actions {
+        justify-content: flex-end;
+        margin-top: 0.4rem;
+    }
+
+    .jps-card-body {
+        padding: 1rem 1rem 1.1rem;
+    }
+
+    .jps-detail-grid,
+    .jps-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .jps-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .jps-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

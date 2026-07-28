@@ -8,7 +8,7 @@ No se ha encontrado ningún bloqueo que cambie sustancialmente la arquitectura. 
 
 ## Disponible (no requiere respuesta del usuario)
 
-- Rutas reales confirmadas: proyecto (`/home/alvaro/Descargas/jellyfinnotify/JellyNotify`, git limpio, rama `main`) y entorno de pruebas (`/home/alvaro/Descargas/jellyprovidersections`, vacío).
+- Rutas reales confirmadas: proyecto (`/home/alvaro/Descargas/jellyfinnotify/JellyNotify`, git limpio, rama `main`) y entorno de pruebas (`testenv/` (dentro de este repo), vacío).
 - Docker 29.6.1 y Docker Compose 5.1.4 disponibles. `gh` CLI disponible. `dotnet` SDK **no** instalado en el host (ver bloqueante técnico menor abajo, con solución ya identificada).
 - Arquitectura de CPU: `x86_64`.
 - Versión objetivo de Jellyfin: **10.11.11** (verificada como release real, con paquetes NuGet `Jellyfin.Controller`/`Jellyfin.Model` 10.11.11 publicados) — misma que ya usa JellyNotify en producción.

@@ -11,6 +11,12 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+
+    <!-- The plugin marks these PrivateAssets="All" (Jellyfin supplies them at
+         runtime), so they do not flow transitively and the test project has to
+         reference them itself to see BasePluginConfiguration and friends. -->
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.11" />
+    <PackageReference Include="Jellyfin.Model" Version="10.11.11" />
   </ItemGroup>
 
   <ItemGroup>
