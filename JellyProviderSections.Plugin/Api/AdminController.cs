@@ -470,13 +470,13 @@ public class AdminController : ControllerBase
             tmdb = new
             {
                 configured = !string.IsNullOrWhiteSpace(config.TmdbSettings.ApiKey),
-                config.TmdbSettings.Enabled,
+                enabled = config.TmdbSettings.Enabled,
             },
             seerr = new
             {
                 configured = !string.IsNullOrWhiteSpace(config.SeerrSettings.ApiKey)
                     && !string.IsNullOrWhiteSpace(config.SeerrSettings.ServerUrl),
-                config.SeerrSettings.Enabled,
+                enabled = config.SeerrSettings.Enabled,
             },
             sections = new
             {

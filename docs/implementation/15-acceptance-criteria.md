@@ -2,6 +2,44 @@
 
 Checklist verificable, mapeado 1:1 sobre la sección 29 del encargo original del usuario. Cada criterio indica cómo se verifica y a qué parte de `11-test-matrix.md` corresponde. El proyecto no se considera terminado hasta que todos los criterios marcados como obligatorios para el MVP estén en verde con evidencia real (no solo "debería funcionar").
 
+## Estado a 2026-07-29
+
+Verificado ejecutando contra el entorno real de `testenv/` (Jellyfin 10.11.11, Home Screen Sections 2.5.11.0, File Transformation 2.5.11.0, Seerr 3.4.0):
+
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| 1 Compila de forma reproducible | **Cumplido** | Build en contenedor, 0 avisos y 0 errores |
+| 2 Se instala correctamente | **Cumplido** | `Jellyfin Provider Sections 0.0.1.0 Active` en `GET /Plugins` |
+| 3 Detecta Home Screen Sections | **Cumplido** | Diagnóstico reporta `available: true, version 2.5.11.0` |
+| 4 Detecta las dependencias | **Cumplido** | Detecta también File Transformation |
+| 5 Registra varias secciones | **Cumplido** | 3 secciones registradas |
+| 6 UUID estable | **Cumplido** | Mismos ids tras reiniciar y tras editar |
+| 7 Aparece en Modular Home | **Cumplido** | `GET /HomeScreen/Sections` devuelve las 3 |
+| 8/9 Activar y desactivar | **Cumplido** | Alta y baja del registro |
+| 11 Conserva posición tras reinicio | **Cumplido** | Ids intactos tras reinicio completo del contenedor |
+| 12 Obtiene regiones | **Cumplido** | 139 regiones reales de TMDb |
+| 13 Obtiene proveedores por región | **Cumplido** | 68 proveedores de series en España |
+| 14 Logos en la configuración | **Cumplido** | `logoPath` real por proveedor |
+| 15 Logo a la izquierda del título | **Cumplido a nivel de contrato** | El `<img>` viaja en el `displayText` que sirve HSS. **Falta la captura visual en navegador**, que el encargo exige explícitamente |
+| 16 Consultas Discover válidas | **Cumplido** | 60 títulos reales de Crunchyroll España |
+| 17/18 Muestra películas y series | **Cumplido** | Secciones de ambos tipos |
+| 19 Resuelve contenido local | **Cumplido** | "Ataque a los Titanes" vuelve como ítem real con `UserData` |
+| 22 Muestra contenido externo | **Cumplido** | 59 de 60 como tarjetas externas |
+| 23 Consulta estados de Seerr | **Cumplido** | `Unknown` a `Processing` tras solicitar |
+| 24/25 Solicita películas y series | **Cumplido** | Ambas creadas en Seerr |
+| 26 Atribuye al usuario correcto | **Cumplido** | `jellyfinUserId` coincide con el usuario de la sesión |
+| 28 Contenido ya solicitado | **Cumplido** | 409 y 202 tratados como estado, no como error |
+| 43 No expone secretos | **Cumplido** | `GET /Admin/config` solo devuelve booleanos `hasApiKey` |
+| 44 Pruebas unitarias | **Cumplido** | 29 en verde, incluidos 3 de escape XSS |
+| Seguridad: XSS vía `displayText` | **Cumplido** | Un nombre con `<script>` llega escapado como `&lt;script&gt;` en el servidor real |
+
+| 20/21 Respeta permisos, no revela bibliotecas no autorizadas | **Cumplido** | Un usuario sin acceso a la biblioteca de Series recibe el título como externo (0 locales), el admin lo recibe como local |
+| 31 Se degrada si Seerr cae | **Cumplido** | La fila sigue sirviendo 60 títulos; solicitar devuelve `Unavailable` con HTTP 503 y mensaje correcto |
+| 32 Se degrada si TMDb cae | **Cumplido** | Con clave inválida la home responde 200 y la fila queda vacía, sin excepción; el test informa del 401 |
+| 33 Utiliza caché | **Cumplido** | Segunda carga dentro del TTL no repite la llamada |
+
+Pendientes de cerrar: **capturas visuales en navegador** (criterios 15, 35 a 42), que el encargo exige explícitamente y no pueden sustituirse por comprobaciones de API, y la medición de rendimiento sobre una biblioteca grande (34), que necesita una biblioteca de miles de ítems que el entorno sintético no tiene.
+
 | # | Criterio | Cómo se verifica | Evidencia | Alcance |
 |---|---|---|---|---|
 | 1 | Compila de forma reproducible | Build en contenedor Docker (`mcr.microsoft.com/dotnet/sdk:9.0`) desde cero, dos veces seguidas, mismo checksum de salida | Log de build + checksum | MVP |

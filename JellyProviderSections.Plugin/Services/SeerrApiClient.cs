@@ -270,7 +270,17 @@ public sealed class SeerrApiClient : ISeerrApiClient
                 "Seerr no está configurado en este servidor.");
         }
 
-        var seerrUser = await GetUserByJellyfinIdAsync(jellyfinUserId, cancellationToken).ConfigureAwait(false);
+        var (seerrUser, reachable) = await GetJsonWithReachabilityAsync<SeerrUser>(
+            $"user/jellyfin/{jellyfinUserId}",
+            null,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!reachable)
+        {
+            return new SeerrRequestResult(
+                SeerrRequestOutcome.Unavailable,
+                "No se pudo contactar con Seerr. Inténtalo de nuevo más tarde.");
+        }
 
         if (seerrUser is null)
         {
@@ -359,6 +369,19 @@ public sealed class SeerrApiClient : ISeerrApiClient
         int? asUserId,
         CancellationToken cancellationToken)
         where T : class
+        => (await GetJsonWithReachabilityAsync<T>(path, asUserId, cancellationToken).ConfigureAwait(false)).Value;
+
+    /// <summary>
+    /// Same as <see cref="GetJsonAsync{T}"/> but also reports whether Seerr
+    /// answered at all. "No such user" and "the server is down" are both a null
+    /// result, and telling a user to go sign up for an account when the server
+    /// is simply unreachable sends them on a pointless errand.
+    /// </summary>
+    private async Task<(T? Value, bool Reachable)> GetJsonWithReachabilityAsync<T>(
+        string path,
+        int? asUserId,
+        CancellationToken cancellationToken)
+        where T : class
     {
         try
         {
@@ -367,7 +390,8 @@ public sealed class SeerrApiClient : ISeerrApiClient
 
             if (response.StatusCode == HttpStatusCode.NotFound)
             {
-                return null;
+                // Seerr answered, it just has no such record.
+                return (null, true);
             }
 
             if (!response.IsSuccessStatusCode)
@@ -376,22 +400,23 @@ public sealed class SeerrApiClient : ISeerrApiClient
                     "[ProviderSections] Seerr {Path} returned {StatusCode}",
                     path,
                     (int)response.StatusCode);
-                return null;
+                return (null, true);
             }
 
             var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            return await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, cancellationToken)
+            var value = await JsonSerializer.DeserializeAsync<T>(stream, JsonOptions, cancellationToken)
                 .ConfigureAwait(false);
+            return (value, true);
         }
         catch (JsonException ex)
         {
             _logger.LogWarning("[ProviderSections] Seerr {Path} returned malformed JSON: {Message}", path, ex.Message);
-            return null;
+            return (null, true);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
         {
             _logger.LogWarning("[ProviderSections] Seerr {Path} failed: {Message}", path, Sanitize(ex.Message));
-            return null;
+            return (null, false);
         }
     }
 
