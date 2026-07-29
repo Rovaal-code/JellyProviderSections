@@ -108,7 +108,7 @@ public sealed class ProviderLogoService : IProviderLogoService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _logger.LogWarning(ex, "[ProviderSections] Could not read cached logo for provider {Id}", tmdbProviderId);
+            _logger.LogWarning(ex, "[JellyProvider Sections] Could not read cached logo for provider {Id}", tmdbProviderId);
         }
 
         var logoPath = FindLogoPath(tmdbProviderId)
@@ -136,7 +136,7 @@ public sealed class ProviderLogoService : IProviderLogoService
         {
             // Serving the logo matters more than caching it; a failed write just
             // means the next request downloads again.
-            _logger.LogWarning(ex, "[ProviderSections] Could not cache logo for provider {Id}", tmdbProviderId);
+            _logger.LogWarning(ex, "[JellyProvider Sections] Could not cache logo for provider {Id}", tmdbProviderId);
         }
 
         return new CachedLogo(download.Content, download.ContentType);
@@ -154,7 +154,7 @@ public sealed class ProviderLogoService : IProviderLogoService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _logger.LogWarning(ex, "[ProviderSections] Could not clear the logo cache");
+            _logger.LogWarning(ex, "[JellyProvider Sections] Could not clear the logo cache");
         }
     }
 

@@ -261,7 +261,7 @@ public sealed class SeerrApiClient : ISeerrApiClient
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[ProviderSections] Seerr user import returned {StatusCode}",
+                    "[JellyProvider Sections] Seerr user import returned {StatusCode}",
                     (int)response.StatusCode);
                 return false;
             }
@@ -276,7 +276,7 @@ public sealed class SeerrApiClient : ISeerrApiClient
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
         {
-            _logger.LogWarning("[ProviderSections] Seerr user import failed: {Message}", Sanitize(ex.Message));
+            _logger.LogWarning("[JellyProvider Sections] Seerr user import failed: {Message}", Sanitize(ex.Message));
             return false;
         }
     }
@@ -379,7 +379,7 @@ public sealed class SeerrApiClient : ISeerrApiClient
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
         {
-            _logger.LogWarning("[ProviderSections] Seerr request failed: {Message}", Sanitize(ex.Message));
+            _logger.LogWarning("[JellyProvider Sections] Seerr request failed: {Message}", Sanitize(ex.Message));
             return new SeerrRequestResult(
                 SeerrRequestOutcome.Unavailable,
                 "No se pudo contactar con Seerr.");
@@ -425,7 +425,7 @@ public sealed class SeerrApiClient : ISeerrApiClient
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[ProviderSections] Seerr {Path} returned {StatusCode}",
+                    "[JellyProvider Sections] Seerr {Path} returned {StatusCode}",
                     path,
                     (int)response.StatusCode);
                 return (null, true);
@@ -438,12 +438,12 @@ public sealed class SeerrApiClient : ISeerrApiClient
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning("[ProviderSections] Seerr {Path} returned malformed JSON: {Message}", path, ex.Message);
+            _logger.LogWarning("[JellyProvider Sections] Seerr {Path} returned malformed JSON: {Message}", path, ex.Message);
             return (null, true);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
         {
-            _logger.LogWarning("[ProviderSections] Seerr {Path} failed: {Message}", path, Sanitize(ex.Message));
+            _logger.LogWarning("[JellyProvider Sections] Seerr {Path} failed: {Message}", path, Sanitize(ex.Message));
             return (null, false);
         }
     }

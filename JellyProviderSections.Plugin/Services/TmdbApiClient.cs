@@ -330,7 +330,7 @@ public sealed class TmdbApiClient : ITmdbApiClient
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[ProviderSections] TMDb image download returned {StatusCode} for size {Size}",
+                    "[JellyProvider Sections] TMDb image download returned {StatusCode} for size {Size}",
                     (int)response.StatusCode,
                     size);
                 return null;
@@ -342,7 +342,7 @@ public sealed class TmdbApiClient : ITmdbApiClient
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            _logger.LogWarning("[ProviderSections] TMDb image download failed: {Message}", Sanitize(ex.Message));
+            _logger.LogWarning("[JellyProvider Sections] TMDb image download failed: {Message}", Sanitize(ex.Message));
             return null;
         }
     }
@@ -360,7 +360,7 @@ public sealed class TmdbApiClient : ITmdbApiClient
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "[ProviderSections] TMDb {Path} returned {StatusCode}",
+                    "[JellyProvider Sections] TMDb {Path} returned {StatusCode}",
                     path,
                     (int)response.StatusCode);
                 return null;
@@ -372,12 +372,12 @@ public sealed class TmdbApiClient : ITmdbApiClient
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning("[ProviderSections] TMDb {Path} returned malformed JSON: {Message}", path, ex.Message);
+            _logger.LogWarning("[JellyProvider Sections] TMDb {Path} returned malformed JSON: {Message}", path, ex.Message);
             return null;
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
         {
-            _logger.LogWarning("[ProviderSections] TMDb {Path} failed: {Message}", path, Sanitize(ex.Message));
+            _logger.LogWarning("[JellyProvider Sections] TMDb {Path} failed: {Message}", path, Sanitize(ex.Message));
             return null;
         }
     }
@@ -410,7 +410,7 @@ public sealed class TmdbApiClient : ITmdbApiClient
                 ?? TimeSpan.FromSeconds(Math.Pow(2, attempt));
 
             _logger.LogWarning(
-                "[ProviderSections] TMDb rate limited on {Path}, retrying in {Seconds}s",
+                "[JellyProvider Sections] TMDb rate limited on {Path}, retrying in {Seconds}s",
                 path,
                 delay.TotalSeconds);
 

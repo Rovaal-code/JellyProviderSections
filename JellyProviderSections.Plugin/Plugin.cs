@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.JellyProviderSections;
 
 /// <summary>
-/// The main Jellyfin Provider Sections plugin class.
+/// The main JellyProvider Sections plugin class.
 /// Registers the plugin with Jellyfin and serves the configuration web page.
 /// </summary>
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
@@ -36,7 +36,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         _logger = logger;
         Instance = this;
-        _logger.LogInformation("Jellyfin Provider Sections plugin v{Version} loaded", Version);
+        _logger.LogInformation("JellyProvider Sections plugin v{Version} loaded", Version);
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     public static Plugin? Instance { get; private set; }
 
     /// <inheritdoc />
-    public override string Name => "Jellyfin Provider Sections";
+    public override string Name => "JellyProvider Sections";
 
     /// <inheritdoc />
     public override string Description => "Creates dynamic home screen sections based on TMDb streaming providers, with local library resolution and Seerr requests.";
@@ -66,7 +66,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = "jellyprovidersections",
-                DisplayName = "Provider Sections",
+                DisplayName = "JellyProvider Sections",
                 EnableInMainMenu = true,
                 MenuIcon = "video_library",
                 EmbeddedResourcePath = $"{ResourcePrefix}.Configuration.configPage.html",
@@ -82,6 +82,6 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     {
         ArgumentNullException.ThrowIfNull(configuration);
         UpdateConfiguration(configuration);
-        _logger.LogInformation("Jellyfin Provider Sections configuration updated");
+        _logger.LogInformation("JellyProvider Sections configuration updated");
     }
 }

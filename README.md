@@ -1,4 +1,4 @@
-# Jellyfin Provider Sections
+# JellyProvider Sections
 
 Adds home screen rows by streaming provider to Jellyfin: "Popular en Crunchyroll", "Novedades
 en Prime Video", whatever the administrator defines. Each row is a TMDb Discover query for a
@@ -31,12 +31,12 @@ Add the shared catalogue once in Jellyfin, under Dashboard → Plugins → Repos
 https://raw.githubusercontent.com/Rovaal-code/jellyfin-plugins/main/manifest.json
 ```
 
-"Jellyfin Provider Sections" then appears in the plugin catalogue alongside JellyNotify.
+"JellyProvider Sections" then appears in the plugin catalogue alongside JellyNotify.
 Install it and restart Jellyfin.
 
 ## Configure
 
-Dashboard → Plugins → **Provider Sections**.
+Dashboard → Plugins → **JellyProvider Sections**.
 
 1. **Conexiones**: paste the TMDb API key and, if you want requests, the Seerr URL and key.
    Keys are stored server side and are never sent back to the browser.

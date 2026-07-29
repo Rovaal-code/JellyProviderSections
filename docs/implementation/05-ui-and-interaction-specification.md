@@ -1,6 +1,6 @@
 # 05 — Especificación de UI e interacción
 
-Fuente: sección 13 del encargo original, `research/09-ui-reference-analysis.md` (tokens JellyNotify), `research/02` §4 (patrón `.jn-card`). Nomenclatura de clase propia: prefijo `jps-` (Jellyfin Provider Sections), nunca `jn-`, para no colisionar si ambos plugins conviven en la misma página de Jellyfin.
+Fuente: sección 13 del encargo original, `research/09-ui-reference-analysis.md` (tokens JellyNotify), `research/02` §4 (patrón `.jn-card`). Nomenclatura de clase propia: prefijo `jps-` (JellyProvider Sections), nunca `jn-`, para no colisionar si ambos plugins conviven en la misma página de Jellyfin.
 
 ## Tokens visuales heredados (decisión ya confirmada: misma paleta, tipografía de sistema)
 

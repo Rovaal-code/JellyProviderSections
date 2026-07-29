@@ -88,7 +88,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
         if (assembly is null)
         {
             _logger.LogWarning(
-                "[ProviderSections] Home Screen Sections is not installed, sections cannot be registered. "
+                "[JellyProvider Sections] Home Screen Sections is not installed, sections cannot be registered. "
                 + "Install it from https://github.com/IAmParadox27/jellyfin-plugin-home-sections");
             return 0;
         }
@@ -101,7 +101,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
         if (registerMethod is null)
         {
             _logger.LogError(
-                "[ProviderSections] Found Home Screen Sections {Version} but its {Type}.{Method} entry point is "
+                "[JellyProvider Sections] Found Home Screen Sections {Version} but its {Type}.{Method} entry point is "
                 + "missing. This build of Home Screen Sections is not compatible.",
                 DetectedHomeScreenSectionsVersion,
                 PluginInterfaceTypeName,
@@ -115,7 +115,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             // its frontend is never injected, so nothing renders. Registration
             // "succeeding" here would otherwise look like everything is fine.
             _logger.LogWarning(
-                "[ProviderSections] File Transformation is not installed. Sections will register but will not be "
+                "[JellyProvider Sections] File Transformation is not installed. Sections will register but will not be "
                 + "visible in Jellyfin Web, because Home Screen Sections cannot inject its frontend without it.");
         }
 
@@ -131,7 +131,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
                 registered++;
 
                 _logger.LogInformation(
-                    "[ProviderSections] Registered section {Name} ({Id})",
+                    "[JellyProvider Sections] Registered section {Name} ({Id})",
                     section.DisplayName,
                     section.Id);
             }
@@ -139,12 +139,12 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             {
                 _logger.LogError(
                     ex.InnerException ?? ex,
-                    "[ProviderSections] Home Screen Sections rejected section {Id}",
+                    "[JellyProvider Sections] Home Screen Sections rejected section {Id}",
                     section.Id);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[ProviderSections] Failed to register section {Id}", section.Id);
+                _logger.LogError(ex, "[JellyProvider Sections] Failed to register section {Id}", section.Id);
             }
         }
 
@@ -181,7 +181,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             migrated++;
 
             _logger.LogInformation(
-                "[ProviderSections] Migrated section id {OldId} to {NewId}: the old value was not a valid CSS "
+                "[JellyProvider Sections] Migrated section id {OldId} to {NewId}: the old value was not a valid CSS "
                 + "identifier and prevented Jellyfin Web from rendering the home screen",
                 oldId,
                 section.Id);
@@ -223,7 +223,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             if (instance is null)
             {
                 _logger.LogWarning(
-                    "[ProviderSections] {Type}.Instance was not reachable, so the Home Screen Sections settings "
+                    "[JellyProvider Sections] {Type}.Instance was not reachable, so the Home Screen Sections settings "
                     + "row could not be pre-created",
                     HomeScreenSectionsPluginTypeName);
                 return;
@@ -235,7 +235,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
 
             if (configuration is null)
             {
-                _logger.LogWarning("[ProviderSections] Home Screen Sections exposed no Configuration property");
+                _logger.LogWarning("[JellyProvider Sections] Home Screen Sections exposed no Configuration property");
                 return;
             }
 
@@ -243,7 +243,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
                 is not System.Collections.IList settings)
             {
                 _logger.LogWarning(
-                    "[ProviderSections] Home Screen Sections' SectionSettings is not a list this build understands");
+                    "[JellyProvider Sections] Home Screen Sections' SectionSettings is not a list this build understands");
                 return;
             }
 
@@ -267,7 +267,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             if (settingsType is null || Activator.CreateInstance(settingsType) is not { } entry)
             {
                 _logger.LogWarning(
-                    "[ProviderSections] Could not work out the type of Home Screen Sections' section settings "
+                    "[JellyProvider Sections] Could not work out the type of Home Screen Sections' section settings "
                     + "entries, so the row for {Id} was not pre-created",
                     section.Id);
                 return;
@@ -305,7 +305,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
                 if (settingsProperty?.CanWrite != true)
                 {
                     _logger.LogWarning(
-                        "[ProviderSections] Home Screen Sections' SectionSettings is a fixed-size collection that "
+                        "[JellyProvider Sections] Home Screen Sections' SectionSettings is a fixed-size collection that "
                         + "cannot be replaced, so the row for {Id} was not pre-created",
                         section.Id);
                     return;
@@ -323,14 +323,14 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
                 ?.Invoke(instance, null);
 
             _logger.LogInformation(
-                "[ProviderSections] Created the Home Screen Sections settings row for {Name}, defaulting to Portrait",
+                "[JellyProvider Sections] Created the Home Screen Sections settings row for {Name}, defaulting to Portrait",
                 section.DisplayName);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(
                 ex,
-                "[ProviderSections] Could not pre-create the Home Screen Sections settings row for {Id}. "
+                "[JellyProvider Sections] Could not pre-create the Home Screen Sections settings row for {Id}. "
                 + "The section still registers, but it will not appear until Home Screen Sections' own "
                 + "settings page is saved once.",
                 section.Id);

@@ -49,7 +49,7 @@ public sealed class RegisterSectionsStartupTask : IScheduledTask
         + "en disco las secciones registradas por otros plugins.";
 
     /// <inheritdoc />
-    public string Category => "Provider Sections";
+    public string Category => "JellyProvider Sections";
 
     /// <inheritdoc />
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
@@ -61,7 +61,7 @@ public sealed class RegisterSectionsStartupTask : IScheduledTask
         _transformationRegistrar.Register();
 
         _logger.LogInformation(
-            "[ProviderSections] Startup registration complete, {Count} section(s) registered",
+            "[JellyProvider Sections] Startup registration complete, {Count} section(s) registered",
             registered);
 
         progress?.Report(100);

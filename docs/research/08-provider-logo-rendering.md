@@ -85,7 +85,7 @@ Es decir, JellyBridge **nunca llama a la API de TMDb directamente**: delega el d
 
 ### Qué NO copiar de JellyBridge
 
-- El patrón de "vídeo placeholder real generado con FFmpeg dentro de una biblioteca de verdad" para representar contenido no presente. Es pesado (llamada a FFmpeg por ítem, caché de vídeos, limpieza), invasivo (ítems reproducibles falsos que ensucian bibliotecas y plugins de terceros, como demuestra la issue #13) y no es la categoría de solución que pide el requisito de "secciones dinámicas de home" — el requisito de Jellyfin Provider Sections apunta a filas de Home Screen Sections con tarjetas marcadas como externas, no a una biblioteca sintética completa.
+- El patrón de "vídeo placeholder real generado con FFmpeg dentro de una biblioteca de verdad" para representar contenido no presente. Es pesado (llamada a FFmpeg por ítem, caché de vídeos, limpieza), invasivo (ítems reproducibles falsos que ensucian bibliotecas y plugins de terceros, como demuestra la issue #13) y no es la categoría de solución que pide el requisito de "secciones dinámicas de home" — el requisito de JellyProvider Sections apunta a filas de Home Screen Sections con tarjetas marcadas como externas, no a una biblioteca sintética completa.
 - La dependencia de un fork parcheado de Jellyseerr para que las aprobaciones funcionen: exactamente el tipo de acoplamiento frágil a evitar; el plan debe funcionar contra Seerr/Jellyseerr estándar.
 
 ### Nivel de confianza

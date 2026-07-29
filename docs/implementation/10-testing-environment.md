@@ -46,7 +46,7 @@ Volúmenes persistentes para `jellyfin/config`, `jellyfin/media-synthetic` y `se
 - Home Screen Sections **2.5.11.0**
 - File Transformation **2.5.11.0** (dependencia transitiva de HSS)
 - Plugin Pages **2.4.11.0** (opcional, no requerido por el MVP, se instala solo si se quiere probar su ausencia no rompe nada — ver `research/04` §6)
-- Jellyfin Provider Sections (el plugin nuevo, compilado por `build-and-install-plugin.sh`)
+- JellyProvider Sections (el plugin nuevo, compilado por `build-and-install-plugin.sh`)
 
 Instalación vía el repositorio de catálogo real de cada plugin (añadiendo sus manifests públicos en **Dashboard → Plugins → Repositorios** del Jellyfin de prueba) en vez de copiar DLLs a mano, para que el flujo de prueba sea representativo del flujo real de un administrador.
 

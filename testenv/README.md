@@ -102,7 +102,7 @@ Comprobado de verdad en esta máquina, no asumido:
 - Seerr arranca y responde en `/api/v1/settings/public`.
 - La biblioteca sintética se genera y el contenedor la ve en `/media` (solo lectura).
 - `build-and-install-plugin.sh` compila, instala y reinicia; Jellyfin carga el
-  plugin: `Jellyfin Provider Sections plugin v0.0.1.0 loaded`.
+  plugin: `JellyProvider Sections plugin v0.0.1.0 loaded`.
 - **Home Screen Sections 2.5.11.0 y File Transformation 2.5.11.0 cargan sin
   errores en Jellyfin 10.11.11.** Esto cierra empíricamente el riesgo de
   compatibilidad más alto de `docs/implementation/14-risks-and-mitigations.md`,

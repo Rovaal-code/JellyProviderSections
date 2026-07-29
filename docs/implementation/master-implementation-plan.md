@@ -1,10 +1,10 @@
-# Plan maestro de implementación — Jellyfin Provider Sections
+# Plan maestro de implementación — JellyProvider Sections
 
 Fecha: 2026-07-28. Estado del gate: **READY WITH ASSUMPTIONS** (ver `research/11-open-questions-and-readiness.md`). Este documento es el punto de entrada único para implementar el proyecto sin repetir la investigación — enlaza y resume `01` a `15` de este directorio, que a su vez se apoyan en `research/01` a `research/11` (código fuente real citado, no README). Un agente que implemente a partir de aquí no necesita releer la investigación salvo para verificar una cita concreta.
 
 ## 1. Objetivo
 
-Construir "Jellyfin Provider Sections", un plugin de Jellyfin que permite a un administrador crear un número arbitrario de secciones dinámicas de home basadas en proveedores de streaming de TMDb (p. ej. "Popular en Crunchyroll"), registradas en Home Screen Sections, resueltas contra la biblioteca local de Jellyfin, y con solicitud de contenido ausente vía Seerr. Detalle completo en `01-product-requirements.md`.
+Construir "JellyProvider Sections", un plugin de Jellyfin que permite a un administrador crear un número arbitrario de secciones dinámicas de home basadas en proveedores de streaming de TMDb (p. ej. "Popular en Crunchyroll"), registradas en Home Screen Sections, resueltas contra la biblioteca local de Jellyfin, y con solicitud de contenido ausente vía Seerr. Detalle completo en `01-product-requirements.md`.
 
 ## 2. Alcance
 

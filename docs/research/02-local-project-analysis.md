@@ -36,7 +36,7 @@ JellyNotify/
 └── JellyNotify.sln             # 2 proyectos: JellyNotify.Plugin + JellyNotify.Tests
 ```
 
-No existe todavía ningún directorio para "Jellyfin Provider Sections"; el repositorio aloja un único plugin.
+No existe todavía ningún directorio para "JellyProvider Sections"; el repositorio aloja un único plugin.
 
 ## 3. Arquitectura técnica del plugin (patrón a replicar)
 
@@ -121,4 +121,4 @@ Patrones de componente reutilizables observados:
 
 ## 7. Implicación arquitectónica principal
 
-JellyNotify demuestra que este entorno del usuario ya sabe compilar, empaquetar, versionar y distribuir un plugin GPL-3.0 completo para Jellyfin 10.11.11 con inyección de frontend, configuración XML, secretos enmascarados y múltiples integraciones externas (Seerr, Sonarr/Radarr). El nuevo plugin "Jellyfin Provider Sections" puede seguir el mismo esqueleto de proyecto casi 1:1 (mismo target framework, mismas versiones de paquete Jellyfin, mismo patrón de `Plugin`/`PluginServiceRegistrator`/`PluginConfiguration`/`WebAssetsController`), como **proyecto hermano** dentro del mismo repositorio (`JellyProviderSections.Plugin/` junto a `JellyNotify.Plugin/`), con su propio GUID, su propia entrada en el manifest, y sin tocar el código de JellyNotify. Esta es la recomendación arquitectónica preliminar (pendiente de confirmación explícita del usuario, ver readiness gate).
+JellyNotify demuestra que este entorno del usuario ya sabe compilar, empaquetar, versionar y distribuir un plugin GPL-3.0 completo para Jellyfin 10.11.11 con inyección de frontend, configuración XML, secretos enmascarados y múltiples integraciones externas (Seerr, Sonarr/Radarr). El nuevo plugin "JellyProvider Sections" puede seguir el mismo esqueleto de proyecto casi 1:1 (mismo target framework, mismas versiones de paquete Jellyfin, mismo patrón de `Plugin`/`PluginServiceRegistrator`/`PluginConfiguration`/`WebAssetsController`), como **proyecto hermano** dentro del mismo repositorio (`JellyProviderSections.Plugin/` junto a `JellyNotify.Plugin/`), con su propio GUID, su propia entrada en el manifest, y sin tocar el código de JellyNotify. Esta es la recomendación arquitectónica preliminar (pendiente de confirmación explícita del usuario, ver readiness gate).

@@ -6,7 +6,7 @@ Fuente: investigación completa en `docs/research/` (11 documentos + resumen). E
 
 | | |
 |---|---|
-| Nombre provisional | Jellyfin Provider Sections |
+| Nombre provisional | JellyProvider Sections |
 | Nombre de ensamblado | `JellyProviderSections.Plugin` |
 | Namespace raíz | `Jellyfin.Plugin.JellyProviderSections` |
 | GUID del plugin | `05cac539-35ae-4f0d-be40-5f0eabd7f43c` |

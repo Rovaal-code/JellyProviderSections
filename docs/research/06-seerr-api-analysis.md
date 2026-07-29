@@ -2,7 +2,7 @@
 
 > Investigación pura, sin código de producción. Objetivo: determinar el contrato real de la API de
 > Seerr (fork/continuación comunitaria de Jellyseerr/Overseerr) para diseñar la integración
-> "Solicitar contenido" del nuevo plugin `Jellyfin Provider Sections`, y compararlo con el cliente
+> "Solicitar contenido" del nuevo plugin `JellyProvider Sections`, y compararlo con el cliente
 > Seerr ya en producción en JellyNotify (`SeerrApiClient.cs`).
 >
 > **No se ha podido probar contra una instancia Seerr real en ejecución** (no hay servidor Seerr
@@ -28,7 +28,7 @@ que Overseerr/Jellyseerr llevan usando desde su origen para su propio consumo in
   ningún TMDb API key configurado para funcionar** — arranca y sirve metadatos por sí sola con su
   clave embebida, sin ningún paso adicional de configuración TMDb en Seerr.
 - Esto es **completamente independiente** del TMDb API Read Access Token que el propio plugin
-  `Jellyfin Provider Sections` necesita para sus propias llamadas a Discover/Watch Providers — el
+  `JellyProvider Sections` necesita para sus propias llamadas a Discover/Watch Providers — el
   plugin habla con la API de TMDb directamente, no a través de Seerr, así que sigue necesitando su
   propio token (ver `05-tmdb-provider-analysis.md`).
 - **No se debe reutilizar la clave embebida de Seerr en el plugin nuevo**: está pensada solo para el

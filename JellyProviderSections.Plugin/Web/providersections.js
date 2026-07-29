@@ -1,5 +1,5 @@
 /* ================================================================
-   Jellyfin Provider Sections - configuration page logic
+   JellyProvider Sections - configuration page logic
 
    Vanilla JS, no bundler, served as an embedded resource through
    WebAssetsController (same pattern as JellyNotify).

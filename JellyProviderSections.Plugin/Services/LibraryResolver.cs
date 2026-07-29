@@ -160,7 +160,7 @@ public sealed class LibraryResolver : ILibraryResolver
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[ProviderSections] Local lookup failed for TMDb id {TmdbId}", tmdbId);
+            _logger.LogWarning(ex, "[JellyProvider Sections] Local lookup failed for TMDb id {TmdbId}", tmdbId);
             return null;
         }
     }
@@ -181,7 +181,7 @@ public sealed class LibraryResolver : ILibraryResolver
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "[ProviderSections] Failed to build DTO for local item {ItemId}", item.Id);
+            _logger.LogWarning(ex, "[JellyProvider Sections] Failed to build DTO for local item {ItemId}", item.Id);
             return null;
         }
     }

@@ -3,10 +3,10 @@
   "description": "Creates dynamic home screen sections based on TMDb streaming providers, with local library resolution and Seerr requests.",
   "guid": "05cac539-35ae-4f0d-be40-5f0eabd7f43c",
   "imageUrl": "https://raw.githubusercontent.com/Rovaal-code/JellyProviderSections/main/docs/logo.png",
-  "name": "Jellyfin Provider Sections",
+  "name": "JellyProvider Sections",
   "overview": "Lets an administrator create provider-based streaming sections (e.g. \"Popular on Crunchyroll\") for the Jellyfin home screen, backed by TMDb Discover, resolved against the local library, with Seerr request support.",
   "owner": "Rovaal-code",
   "targetAbi": "10.11.0.0",
   "timestamp": "2026-07-29T00:00:00Z",
-  "version": "0.1.2.0"
+  "version": "0.1.3.0"
 }

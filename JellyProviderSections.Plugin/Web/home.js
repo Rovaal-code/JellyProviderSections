@@ -1,5 +1,5 @@
 /* ================================================================
-   Jellyfin Provider Sections - home screen card decoration
+   JellyProvider Sections - home screen card decoration
 
    Injected into Jellyfin Web's index.html by File Transformation.
 

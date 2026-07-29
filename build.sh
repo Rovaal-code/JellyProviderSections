@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build.sh - Builds, packages and records a release of Jellyfin Provider Sections.
+# build.sh - Builds, packages and records a release of JellyProvider Sections.
 # Usage: ./build.sh [--version 0.1.0.0]
 #
 # Compiles in the .NET SDK container, so no host SDK is needed. Same shape as
@@ -20,7 +20,7 @@ if [[ "${1:-}" == "--version" && -n "${2:-}" ]]; then
     VERSION="$2"
 fi
 
-echo "→ Building Jellyfin Provider Sections ${VERSION}..."
+echo "→ Building JellyProvider Sections ${VERSION}..."
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR" "$RELEASES_DIR"
 

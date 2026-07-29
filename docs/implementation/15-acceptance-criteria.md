@@ -9,7 +9,7 @@ Verificado ejecutando contra el entorno real de `testenv/` (Jellyfin 10.11.11, H
 | Criterio | Estado | Evidencia |
 |---|---|---|
 | 1 Compila de forma reproducible | **Cumplido** | Build en contenedor, 0 avisos y 0 errores |
-| 2 Se instala correctamente | **Cumplido** | `Jellyfin Provider Sections 0.0.1.0 Active` en `GET /Plugins` |
+| 2 Se instala correctamente | **Cumplido** | `JellyProvider Sections 0.0.1.0 Active` en `GET /Plugins` |
 | 3 Detecta Home Screen Sections | **Cumplido** | Diagnóstico reporta `available: true, version 2.5.11.0` |
 | 4 Detecta las dependencias | **Cumplido** | Detecta también File Transformation |
 | 5 Registra varias secciones | **Cumplido** | 3 secciones registradas |

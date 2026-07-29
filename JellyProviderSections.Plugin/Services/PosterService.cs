@@ -147,7 +147,7 @@ public sealed class PosterService : IPosterService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _logger.LogWarning(ex, "[ProviderSections] Could not read the cached poster for {TmdbId}", tmdbId);
+            _logger.LogWarning(ex, "[JellyProvider Sections] Could not read the cached poster for {TmdbId}", tmdbId);
         }
 
         if (!_posterPaths.TryGetValue(tmdbId, out var posterPath))
@@ -171,7 +171,7 @@ public sealed class PosterService : IPosterService
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // Serving the poster matters more than caching it.
-            _logger.LogWarning(ex, "[ProviderSections] Could not cache the poster for {TmdbId}", tmdbId);
+            _logger.LogWarning(ex, "[JellyProvider Sections] Could not cache the poster for {TmdbId}", tmdbId);
         }
 
         return new CachedLogo(download.Content, download.ContentType);
@@ -191,7 +191,7 @@ public sealed class PosterService : IPosterService
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _logger.LogWarning(ex, "[ProviderSections] Could not clear the poster cache");
+            _logger.LogWarning(ex, "[JellyProvider Sections] Could not clear the poster cache");
         }
     }
 

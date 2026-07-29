@@ -52,7 +52,7 @@ public class SectionResultsProvider
 
             if (string.IsNullOrWhiteSpace(sectionId))
             {
-                _logger?.LogWarning("[ProviderSections] Section payload carried no section id");
+                _logger?.LogWarning("[JellyProvider Sections] Section payload carried no section id");
                 return Empty();
             }
 
@@ -72,7 +72,7 @@ public class SectionResultsProvider
             if (builder is null)
             {
                 _logger?.LogWarning(
-                    "[ProviderSections] Content builder unavailable, returning an empty row for {Id}",
+                    "[JellyProvider Sections] Content builder unavailable, returning an empty row for {Id}",
                     sectionId);
                 return Empty();
             }
@@ -85,7 +85,7 @@ public class SectionResultsProvider
                 .GetResult();
 
             _logger?.LogInformation(
-                "[ProviderSections] Section {Name} returned {Count} item(s)",
+                "[JellyProvider Sections] Section {Name} returned {Count} item(s)",
                 section.DisplayName,
                 items.Count);
 
@@ -95,7 +95,7 @@ public class SectionResultsProvider
         {
             // Never throw into HSS: one failing row must not break the whole
             // home screen for the user.
-            _logger?.LogError(ex, "[ProviderSections] Failed to build section results");
+            _logger?.LogError(ex, "[JellyProvider Sections] Failed to build section results");
             return Empty();
         }
     }

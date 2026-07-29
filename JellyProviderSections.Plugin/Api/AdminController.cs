@@ -405,7 +405,7 @@ public class AdminController : ControllerBase
         // existing only after the next restart re-registers what remains. Until
         // then it simply returns no items.
         _logger.LogInformation(
-            "[ProviderSections] Section {Id} deleted. It stops being registered on the next restart.",
+            "[JellyProvider Sections] Section {Id} deleted. It stops being registered on the next restart.",
             id);
 
         return NoContent();
@@ -554,7 +554,7 @@ public class AdminController : ControllerBase
             {
                 // One failing section must not stop the others; the per-section
                 // outcome is already recorded on the section itself.
-                _logger.LogError(ex, "[ProviderSections] Sync failed for section {Id}", section.Id);
+                _logger.LogError(ex, "[JellyProvider Sections] Sync failed for section {Id}", section.Id);
             }
         }
 

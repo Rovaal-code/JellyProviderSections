@@ -134,7 +134,7 @@ public sealed class SectionContentBuilder : ISectionContentBuilder
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[ProviderSections] Discover failed for section {Id}", section.Id);
+            _logger.LogError(ex, "[JellyProvider Sections] Discover failed for section {Id}", section.Id);
             section.LastSyncUtc = DateTime.UtcNow;
             section.LastSyncResult = ProviderSectionSyncResult.Failure;
             section.LastError = ex.Message;
@@ -170,7 +170,7 @@ public sealed class SectionContentBuilder : ISectionContentBuilder
         catch (Exception ex)
         {
             // Losing the timestamp is cosmetic; failing the row is not.
-            _logger.LogWarning(ex, "[ProviderSections] Could not persist the section sync state");
+            _logger.LogWarning(ex, "[JellyProvider Sections] Could not persist the section sync state");
         }
     }
 

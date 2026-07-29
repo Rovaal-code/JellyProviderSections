@@ -62,7 +62,7 @@ public sealed class FileTransformationRegistrar : IFileTransformationRegistrar
         if (assembly is null)
         {
             _logger.LogWarning(
-                "[ProviderSections] File Transformation is not installed, so external cards will render without "
+                "[JellyProvider Sections] File Transformation is not installed, so external cards will render without "
                 + "their TMDb artwork. Home Screen Sections needs it too: install it from "
                 + "https://github.com/IAmParadox27/jellyfin-plugin-file-transformation");
             return false;
@@ -76,7 +76,7 @@ public sealed class FileTransformationRegistrar : IFileTransformationRegistrar
         if (registerMethod is null)
         {
             _logger.LogError(
-                "[ProviderSections] Found File Transformation but its {Type}.{Method} entry point is missing. "
+                "[JellyProvider Sections] Found File Transformation but its {Type}.{Method} entry point is missing. "
                 + "This build is not compatible.",
                 PluginInterfaceTypeName,
                 RegisterTransformationMethodName);
@@ -86,12 +86,12 @@ public sealed class FileTransformationRegistrar : IFileTransformationRegistrar
         try
         {
             registerMethod.Invoke(null, new object?[] { BuildPayload() });
-            _logger.LogInformation("[ProviderSections] Registered the home screen script with File Transformation");
+            _logger.LogInformation("[JellyProvider Sections] Registered the home screen script with File Transformation");
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[ProviderSections] File Transformation rejected the script registration");
+            _logger.LogError(ex, "[JellyProvider Sections] File Transformation rejected the script registration");
             return false;
         }
     }

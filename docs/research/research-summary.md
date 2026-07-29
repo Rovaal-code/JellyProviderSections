@@ -1,4 +1,4 @@
-# Research Summary — Jellyfin Provider Sections
+# Research Summary — JellyProvider Sections
 
 Fecha: 2026-07-28. Estado: **READY WITH ASSUMPTIONS**.
 

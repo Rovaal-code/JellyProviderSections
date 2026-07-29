@@ -36,7 +36,7 @@ public sealed class ServiceLocatorInitializer : IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         PluginServiceLocator.ServiceProvider = _serviceProvider;
-        _logger.LogInformation("[ProviderSections] Service locator ready");
+        _logger.LogInformation("[JellyProvider Sections] Service locator ready");
         return Task.CompletedTask;
     }
 

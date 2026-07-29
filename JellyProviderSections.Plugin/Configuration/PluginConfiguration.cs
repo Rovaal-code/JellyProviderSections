@@ -6,7 +6,7 @@ using MediaBrowser.Model.Plugins;
 namespace Jellyfin.Plugin.JellyProviderSections.Configuration;
 
 /// <summary>
-/// Plugin configuration for Jellyfin Provider Sections.
+/// Plugin configuration for JellyProvider Sections.
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
 {
