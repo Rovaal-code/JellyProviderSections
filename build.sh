@@ -71,16 +71,18 @@ CHECKSUM=$(md5sum "$ZIP_PATH" | awk '{print $1}')
 echo "✓ ${ZIP_PATH}"
 echo "✓ MD5 ${CHECKSUM}"
 
-# The catalogue entry lives in two places: this repo's own manifest (version
-# history of the plugin) and JellyNotify's repository/manifest.json (the single
-# catalogue URL the admin adds to Jellyfin once, listing both plugins).
+# The catalogue is the neutral repository listing every plugin; that is the URL
+# an administrator adds to Jellyfin. JellyNotify's older copy is still written to
+# because it is referenced from the Jellyfin Universal Plugin Repo; drop it from
+# this list once that reference is gone.
 CHANGELOG_FILE="$SCRIPT_DIR/CHANGELOG-current.md"
 CHANGELOG=""
 [[ -f "$CHANGELOG_FILE" ]] && CHANGELOG="$(cat "$CHANGELOG_FILE")"
 
-JELLYNOTIFY_MANIFEST="/home/alvaro/Descargas/jellyfinnotify/JellyNotify/repository/manifest.json"
+CATALOGUE_MANIFEST="/home/alvaro/Descargas/jellyfin-plugins/manifest.json"
+LEGACY_MANIFEST="/home/alvaro/Descargas/jellyfinnotify/JellyNotify/repository/manifest.json"
 
-for manifest_file in "$SCRIPT_DIR/manifest.json" "$JELLYNOTIFY_MANIFEST"; do
+for manifest_file in "$CATALOGUE_MANIFEST" "$LEGACY_MANIFEST"; do
     [[ -f "$manifest_file" ]] || continue
     echo "→ Updating $(basename "$(dirname "$manifest_file")")/$(basename "$manifest_file")..."
     python3 -c "
@@ -136,6 +138,25 @@ with open(filepath, 'w', encoding='utf-8') as f:
 print('  ✓ ' + version + ' -> ' + source_url)
 " "$VERSION" "$CHECKSUM" "$manifest_file" "$CHANGELOG" "$OWNER" "$REPO"
 done
+
+# A zip built twice from the same source does not come out byte for byte
+# identical, so its MD5 changes on every run. The manifests now describe the zip
+# that was just built, and if a release for this version is already published
+# with a different one, Jellyfin will refuse the download. Catch that here rather
+# than at install time on someone else's server.
+if command -v gh >/dev/null 2>&1; then
+    PUBLISHED_URL="https://github.com/${OWNER}/${REPO}/releases/download/v${VERSION%.0}/${ZIP_NAME}"
+    PUBLISHED_MD5="$(curl -sfL "$PUBLISHED_URL" 2>/dev/null | md5sum 2>/dev/null | awk '{print $1}')"
+
+    if [[ -n "$PUBLISHED_MD5" && "$PUBLISHED_MD5" != "$CHECKSUM" ]]; then
+        echo
+        echo "⚠ v${VERSION%.0} is already published with a different checksum:"
+        echo "    published ${PUBLISHED_MD5}"
+        echo "    just built ${CHECKSUM}"
+        echo "  The manifests now describe the new zip, so either replace the release"
+        echo "  asset or bump the version. Leaving it as is breaks installation."
+    fi
+fi
 
 echo
 echo "✓ Done. Publish with:"

@@ -28,7 +28,7 @@ language, separate codebase, distributed through the same plugin catalogue.
 Add the shared catalogue once in Jellyfin, under Dashboard → Plugins → Repositories:
 
 ```text
-https://raw.githubusercontent.com/Rovaal-code/JellyNotify/main/repository/manifest.json
+https://raw.githubusercontent.com/Rovaal-code/jellyfin-plugins/main/manifest.json
 ```
 
 "Jellyfin Provider Sections" then appears in the plugin catalogue alongside JellyNotify.
