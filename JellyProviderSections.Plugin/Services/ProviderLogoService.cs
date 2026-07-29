@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,14 @@ namespace Jellyfin.Plugin.JellyProviderSections.Services;
 /// </summary>
 public interface IProviderLogoService
 {
+    /// <summary>
+    /// Records a provider's TMDb logo path, so its logo can be served before any
+    /// section uses that provider.
+    /// </summary>
+    /// <param name="tmdbProviderId">The TMDb provider id.</param>
+    /// <param name="logoPath">The TMDb logo path.</param>
+    void Remember(int tmdbProviderId, string logoPath);
+
     /// <summary>Gets a provider's logo bytes, downloading and caching on first use.</summary>
     /// <param name="tmdbProviderId">The TMDb provider id.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -44,6 +53,7 @@ public sealed class ProviderLogoService : IProviderLogoService
     // high-DPI screens. TMDb serves w92 for essentially every provider.
     private const string LogoSize = "w92";
 
+    private readonly ConcurrentDictionary<int, string> _logoPaths = new();
     private readonly ITmdbApiClient _tmdbClient;
     private readonly IApplicationPaths _applicationPaths;
     private readonly ILogger<ProviderLogoService> _logger;
@@ -68,6 +78,17 @@ public sealed class ProviderLogoService : IProviderLogoService
         Path.Combine(_applicationPaths.PluginConfigurationsPath, "JellyProviderSections", "logos");
 
     /// <inheritdoc />
+    public void Remember(int tmdbProviderId, string logoPath)
+    {
+        if (tmdbProviderId <= 0 || string.IsNullOrWhiteSpace(logoPath))
+        {
+            return;
+        }
+
+        _logoPaths[tmdbProviderId] = logoPath;
+    }
+
+    /// <inheritdoc />
     public async Task<CachedLogo?> GetLogoAsync(int tmdbProviderId, CancellationToken cancellationToken)
     {
         var cachedPath = Path.Combine(
@@ -90,7 +111,9 @@ public sealed class ProviderLogoService : IProviderLogoService
             _logger.LogWarning(ex, "[ProviderSections] Could not read cached logo for provider {Id}", tmdbProviderId);
         }
 
-        var logoPath = FindLogoPath(tmdbProviderId);
+        var logoPath = FindLogoPath(tmdbProviderId)
+            ?? (_logoPaths.TryGetValue(tmdbProviderId, out var remembered) ? remembered : null);
+
         if (string.IsNullOrWhiteSpace(logoPath))
         {
             return null;
@@ -138,7 +161,8 @@ public sealed class ProviderLogoService : IProviderLogoService
     /// <summary>
     /// Finds the TMDb logo_path for a provider from the sections that use it.
     /// The path is stored on the section when the admin picks the provider, so
-    /// no extra API call is needed to serve a logo.
+    /// no extra API call is needed to serve a logo. Checked before the remembered
+    /// paths because it survives a restart, while those do not.
     /// </summary>
     private static string? FindLogoPath(int tmdbProviderId)
         => Plugin.Instance?.Configuration?.Sections

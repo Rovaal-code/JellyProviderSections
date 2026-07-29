@@ -184,6 +184,18 @@ public class AdminController : ControllerBase
             .GetWatchProvidersAsync(contentType, region, cancellationToken)
             .ConfigureAwait(false);
 
+        // The selector shows every provider in the region, and each row asks this
+        // plugin for a logo. Without this only the providers a section already
+        // uses had a resolvable path, so every other one came back 404 and the
+        // list rendered with the names but no icons.
+        foreach (var provider in providers)
+        {
+            if (!string.IsNullOrWhiteSpace(provider.LogoPath))
+            {
+                _logoService.Remember(provider.ProviderId, provider.LogoPath);
+            }
+        }
+
         return Ok(providers
             .OrderBy(p => p.DisplayPriority)
             .ThenBy(p => p.ProviderName, StringComparer.CurrentCultureIgnoreCase)
