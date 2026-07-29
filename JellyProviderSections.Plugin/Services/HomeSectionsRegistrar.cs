@@ -203,6 +203,11 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             ["displayText"] = DisplayTextBuilder.Build(section),
             ["limit"] = 1,
             ["additionalData"] = section.Id,
+            // Portrait: these rows are catalogue posters, not episode stills, and
+            // it is the shape the poster artwork the home script applies is cut
+            // for. HSS reads this as the section's default; an admin can still
+            // override it per section from its own settings page.
+            ["viewMode"] = "Portrait",
             // Must be the FULL assembly name including version and culture: HSS
             // matches it with `Assembly.FullName == payload.ResultsAssembly`, so
             // the short name silently finds nothing and the row renders empty.

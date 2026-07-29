@@ -28,7 +28,9 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         // Jellyfin services these depend on (ILibraryManager, IDtoService) are
         // themselves singletons, so this is safe.
         serviceCollection.AddSingleton<IHomeSectionsRegistrar, HomeSectionsRegistrar>();
+        serviceCollection.AddSingleton<IFileTransformationRegistrar, FileTransformationRegistrar>();
         serviceCollection.AddSingleton<IProviderLogoService, ProviderLogoService>();
+        serviceCollection.AddSingleton<IPosterService, PosterService>();
         serviceCollection.AddSingleton<ILibraryResolver, LibraryResolver>();
         serviceCollection.AddSingleton<ISectionContentBuilder, SectionContentBuilder>();
 

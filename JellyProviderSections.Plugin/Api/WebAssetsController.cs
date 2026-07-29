@@ -23,14 +23,17 @@ public sealed class WebAssetsController : ControllerBase
     private const string ResourcePrefix = "Jellyfin.Plugin.JellyProviderSections.Web.";
 
     private readonly IProviderLogoService _logoService;
+    private readonly IPosterService _posterService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WebAssetsController"/> class.
     /// </summary>
     /// <param name="logoService">Provider logo cache.</param>
-    public WebAssetsController(IProviderLogoService logoService)
+    /// <param name="posterService">External title poster cache.</param>
+    public WebAssetsController(IProviderLogoService logoService, IPosterService posterService)
     {
         _logoService = logoService;
+        _posterService = posterService;
     }
 
     /// <summary>Serves the configuration page stylesheet.</summary>
@@ -63,6 +66,33 @@ public sealed class WebAssetsController : ControllerBase
         // so this is worth caching hard: it is requested on every home load.
         Response.Headers.CacheControl = "public, max-age=604800";
         return File(logo.Content, logo.ContentType);
+    }
+
+    /// <summary>Serves the home screen script injected into Jellyfin Web.</summary>
+    /// <returns>The JS file.</returns>
+    [HttpGet("Web/home.js")]
+    public ActionResult GetHomeScript()
+        => GetEmbeddedResource("home.js", "application/javascript");
+
+    /// <summary>
+    /// Serves the poster of an external title, cached locally after the first fetch.
+    /// Requested by the home script, which knows only the TMDb id.
+    /// </summary>
+    /// <param name="tmdbId">The TMDb id of the title.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The image, or 404 when the title is unknown or has no poster.</returns>
+    [HttpGet("Poster/{tmdbId:int}")]
+    public async Task<ActionResult> GetPoster(int tmdbId, CancellationToken cancellationToken)
+    {
+        var poster = await _posterService.GetPosterAsync(tmdbId, cancellationToken).ConfigureAwait(false);
+
+        if (poster is null)
+        {
+            return NotFound();
+        }
+
+        Response.Headers.CacheControl = "public, max-age=604800";
+        return File(poster.Content, poster.ContentType);
     }
 
     private ActionResult GetEmbeddedResource(string fileName, string contentType)

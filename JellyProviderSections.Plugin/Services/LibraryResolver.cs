@@ -63,6 +63,7 @@ public sealed class LibraryResolver : ILibraryResolver
     private readonly ILibraryManager _libraryManager;
     private readonly IDtoService _dtoService;
     private readonly IServerApplicationHost _appHost;
+    private readonly IPosterService _posterService;
     private readonly ILogger<LibraryResolver> _logger;
 
     /// <summary>
@@ -71,16 +72,19 @@ public sealed class LibraryResolver : ILibraryResolver
     /// <param name="libraryManager">Jellyfin's library manager.</param>
     /// <param name="dtoService">Jellyfin's DTO service.</param>
     /// <param name="appHost">Server host, used for the server id every DTO must carry.</param>
+    /// <param name="posterService">Poster cache, told about every external title seen.</param>
     /// <param name="logger">Logger.</param>
     public LibraryResolver(
         ILibraryManager libraryManager,
         IDtoService dtoService,
         IServerApplicationHost appHost,
+        IPosterService posterService,
         ILogger<LibraryResolver> logger)
     {
         _libraryManager = libraryManager;
         _dtoService = dtoService;
         _appHost = appHost;
+        _posterService = posterService;
         _logger = logger;
     }
 
@@ -215,6 +219,10 @@ public sealed class LibraryResolver : ILibraryResolver
         if (!string.IsNullOrWhiteSpace(item.PosterPath))
         {
             dto.ProviderIds[PosterUrlKey] = item.PosterPath;
+
+            // The home script only learns a card's TMDb id, so the path has to be
+            // on the server by the time it asks for the artwork.
+            _posterService.Remember(item.Id, item.PosterPath);
         }
 
         if (DateTime.TryParse(

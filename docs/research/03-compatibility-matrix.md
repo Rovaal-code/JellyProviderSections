@@ -24,7 +24,7 @@ Fecha de consulta: 2026-07-28. Ancla de versión: el `manifest.json` de JellyNot
 | Collection Sections | `Jellyfin.Model`, `Jellyfin.Controller`, `Newtonsoft.Json` | → Home Screen Sections (para registrar secciones) |
 | File Transformation | (no inspeccionado el listado completo, confirmado sin refs a HSS/Pages) | Ninguna hacia HSS/Pages/Collection Sections |
 | Pages | (no inspeccionado el listado completo) | → File Transformation (para inyectarse en varios chunks JS) |
-| **Jellyfin Provider Sections (nuevo)** | `Jellyfin.Model 10.11.11`, `Jellyfin.Controller 10.11.11` (mismo patrón que JellyNotify) | → Home Screen Sections (reflexión, igual que Collection Sections); ninguna hacia File Transformation ni Pages (no se necesitan directamente) |
+| **Jellyfin Provider Sections (nuevo)** | `Jellyfin.Model 10.11.11`, `Jellyfin.Controller 10.11.11` (mismo patrón que JellyNotify) | → Home Screen Sections (reflexión, igual que Collection Sections) y **File Transformation** (reflexión, mismo patrón), esta última añadida al implementar las carátulas de las tarjetas externas; ninguna hacia Pages |
 
 ## Grado de confianza de la matriz
 

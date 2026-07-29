@@ -17,18 +17,22 @@ namespace Jellyfin.Plugin.JellyProviderSections.Services;
 public sealed class RegisterSectionsStartupTask : IScheduledTask
 {
     private readonly IHomeSectionsRegistrar _registrar;
+    private readonly IFileTransformationRegistrar _transformationRegistrar;
     private readonly ILogger<RegisterSectionsStartupTask> _logger;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RegisterSectionsStartupTask"/> class.
     /// </summary>
     /// <param name="registrar">The Home Screen Sections registrar.</param>
+    /// <param name="transformationRegistrar">The File Transformation registrar.</param>
     /// <param name="logger">Logger.</param>
     public RegisterSectionsStartupTask(
         IHomeSectionsRegistrar registrar,
+        IFileTransformationRegistrar transformationRegistrar,
         ILogger<RegisterSectionsStartupTask> logger)
     {
         _registrar = registrar;
+        _transformationRegistrar = transformationRegistrar;
         _logger = logger;
     }
 
@@ -51,6 +55,10 @@ public sealed class RegisterSectionsStartupTask : IScheduledTask
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         var registered = _registrar.RegisterAll();
+
+        // Registered here too, and not only at install time, because File
+        // Transformation keeps its registrations in memory exactly like HSS does.
+        _transformationRegistrar.Register();
 
         _logger.LogInformation(
             "[ProviderSections] Startup registration complete, {Count} section(s) registered",

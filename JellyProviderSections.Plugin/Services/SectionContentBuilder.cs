@@ -35,6 +35,8 @@ public interface ISectionContentBuilder
 /// <inheritdoc cref="ISectionContentBuilder" />
 public sealed class SectionContentBuilder : ISectionContentBuilder
 {
+    private static readonly object ConfigurationSaveLock = new();
+
     private readonly ITmdbApiClient _tmdbClient;
     private readonly ILibraryResolver _libraryResolver;
     private readonly IMemoryCache _cache;
@@ -123,6 +125,7 @@ public sealed class SectionContentBuilder : ISectionContentBuilder
                 section.LastError = "La consulta no devolvió resultados.";
             }
 
+            PersistSyncState();
             return results;
         }
         catch (OperationCanceledException)
@@ -135,7 +138,39 @@ public sealed class SectionContentBuilder : ISectionContentBuilder
             section.LastSyncUtc = DateTime.UtcNow;
             section.LastSyncResult = ProviderSectionSyncResult.Failure;
             section.LastError = ex.Message;
+            PersistSyncState();
             return Array.Empty<Models.TmdbDiscoverItem>();
+        }
+    }
+
+    /// <summary>
+    /// Writes the sync outcome to disk.
+    ///
+    /// Without this the diagnostics reset to "never run" on every restart while a
+    /// stale error saved long ago keeps being displayed, which is exactly the
+    /// wrong way round. It only runs on a cache miss, so at most once per section
+    /// per TTL, and the lock is there because Home Screen Sections builds several
+    /// sections in parallel and they would otherwise race on the same file.
+    /// </summary>
+    private void PersistSyncState()
+    {
+        var plugin = Plugin.Instance;
+        if (plugin is null)
+        {
+            return;
+        }
+
+        try
+        {
+            lock (ConfigurationSaveLock)
+            {
+                plugin.SavePluginConfiguration(plugin.Configuration);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Losing the timestamp is cosmetic; failing the row is not.
+            _logger.LogWarning(ex, "[ProviderSections] Could not persist the section sync state");
         }
     }
 

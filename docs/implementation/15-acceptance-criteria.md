@@ -24,7 +24,7 @@ Verificado ejecutando contra el entorno real de `testenv/` (Jellyfin 10.11.11, H
 | 16 Consultas Discover válidas | **Cumplido** | 60 títulos reales de Crunchyroll España |
 | 17/18 Muestra películas y series | **Cumplido** | Secciones de ambos tipos |
 | 19 Resuelve contenido local | **Cumplido** | "Ataque a los Titanes" vuelve como ítem real con `UserData` |
-| 22 Muestra contenido externo | **Parcial** | 59 de 60 vuelven como tarjetas externas y se dibujan con título y año, pero **sin carátula de TMDb**: el servidor guarda la ruta del póster en `ProviderIds["JellyProviderSectionsPoster"]` y nada la consume. Ver "Pendientes" |
+| 22 Muestra contenido externo | **Cumplido, con prueba visual** | Las 99 tarjetas externas de las tres filas se dibujan en vertical con su carátula de TMDb, servida por el plugin. Al pulsarlas se abre la ficha de Jellyfin Enhanced (`evidence/screenshots/11-…`) |
 | 23 Consulta estados de Seerr | **Cumplido** | `Unknown` a `Processing` tras solicitar |
 | 24/25 Solicita películas y series | **Cumplido** | Ambas creadas en Seerr |
 | 26 Atribuye al usuario correcto | **Cumplido** | `jellyfinUserId` coincide con el usuario de la sesión |
@@ -41,7 +41,7 @@ Verificado ejecutando contra el entorno real de `testenv/` (Jellyfin 10.11.11, H
 
 ### Lo que descubrió la verificación en navegador
 
-Siete defectos que ninguna comprobación de API podía revelar, todos corregidos salvo donde se indica:
+Nueve defectos que ninguna comprobación de API podía revelar, todos corregidos:
 
 1. **El id de sección rompía la página principal entera.** Jellyfin Web resuelve cada fila con `querySelector('.' + id)`; un GUID que empieza por dígito no es un identificador CSS válido, así que lanzaba `SyntaxError` y abortaba el renderizado de *todas* las filas, no solo la nuestra. Los ids se generan ahora con el prefijo `jps` y hay una migración que reescribe los antiguos.
 2. **Las filas de series salían vacías.** Los DTO sintéticos no llevaban `ServerId` y el constructor de tarjetas fallaba con `item or serverId cannot be null`. Las de películas sobrevivían, lo que hacía parecer un problema del tipo de contenido.
@@ -50,12 +50,17 @@ Siete defectos que ninguna comprobación de API podía revelar, todos corregidos
 5. **El diagnóstico contradecía al servidor**, reportando TMDb, Seerr, HSS y File Transformation como no detectados con las 3 secciones registradas y funcionando: el cliente esperaba una forma plana y el endpoint responde anidada.
 6. **La pestaña de conexiones no cargaba nada y al guardar destruía la configuración.** Leía `tmdbSettings`/`seerrSettings` (el servidor devuelve `tmdb`/`seerr`) y enviaba un cuerpo anidado a un endpoint que espera `SaveConfigRequest` plano, de modo que "Guardar" mandaba `enabled: false` en ambas integraciones.
 7. **El panel era ilegible en tema claro.** Los tokens de color estaban fijados al tema oscuro. Jellyfin marca el tema activo en `data-theme` del `<html>`; ahora hay un bloque `:root[data-theme="light"]` y las superficies con tinte son tokens en vez de literales.
+8. **Tres botones del panel llamaban a rutas inexistentes** y respondían 404: "Sincronizar ahora", "Previsualizar" y el "Probar consulta" de la tarjeta de sección. Los tres endpoints existen ya (`POST sync-now`, `GET sections/{id}/preview`, `POST sections/{id}/test-query`).
+9. **El estado de sincronización no se guardaba.** `LastSyncUtc`, `LastSyncResult` y `LastError` solo vivían en memoria, así que el diagnóstico volvía a "Nunca" en cada reinicio mientras un error antiguo guardado en disco se quedaba fijo. Ahora se persiste en el fallo de caché, que es como mucho una vez por sección y TTL, con un cerrojo porque HSS construye varias secciones en paralelo.
+
+### Carátulas verticales y ficha al pulsar
+
+Home Screen Sections elige su renderizador de tarjetas con carátula **por clave de sección** (solo `Discover`, `DiscoverMovies` y `DiscoverTV`), así que las secciones de terceros pasan siempre por el constructor de tarjetas estándar de Jellyfin, que deduce la URL de la imagen del id del ítem. En una tarjeta externa ese id es sintético y ningún endpoint de imagen lo resuelve, de ahí que salieran planas. El plugin inyecta ahora `Web/home.js` mediante File Transformation: decodifica el id de TMDb del propio id sintético, sin ninguna petición extra, pide la carátula a `/JellyProviderSections/Poster/{id}` y marca la tarjeta como `discover-card` con `data-tmdb-id` y `data-media-type`, que es el contrato que la ficha de Jellyfin Enhanced escucha. Las secciones se registran además con `viewMode: "Portrait"`.
+
+Esto añade una dependencia directa de File Transformation que la investigación había descartado; ver la actualización en `research/04-home-screen-sections-integration.md` §4. Jellyfin Enhanced sigue siendo opcional: sin él la tarjeta se dibuja igual y el clic no hace nada, en lugar de navegar a una ficha inexistente.
 
 ### Pendientes
 
-- **Carátulas de las tarjetas externas** (criterio 22, parcial). Falta el consumidor de `ProviderIds["JellyProviderSectionsPoster"]`. Jellyfin Web construye la URL de imagen a partir del id del ítem, que en las tarjetas externas es sintético, así que hace falta inyección en cliente vía File Transformation, que es justo para lo que el plugin ya declara esa dependencia.
-- **Tres botones del panel llaman a rutas que no existen** y responden 404: "Sincronizar ahora" (`POST /Admin/sync-now`), "Previsualizar" (`GET /Admin/sections/{id}/preview`) y el "Probar consulta" de la tarjeta (`POST /Admin/sections/{id}/test-query`; el del formulario sí funciona, usa `POST /Admin/test-query`). Faltan los tres endpoints en el servidor.
-- **El estado de sincronización no se persiste.** `LastSyncUtc`, `LastSyncResult` y `LastError` se actualizan solo en memoria, así que cada reinicio los devuelve a "Nunca" y un error antiguo guardado en disco puede quedarse indefinidamente.
 - **Medición de rendimiento con biblioteca grande** (criterio 34): la biblioteca sintética tiene 6 títulos.
 
 | # | Criterio | Cómo se verifica | Evidencia | Alcance |

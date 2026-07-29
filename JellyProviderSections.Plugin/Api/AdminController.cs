@@ -28,6 +28,7 @@ public class AdminController : ControllerBase
     private readonly IHomeSectionsRegistrar _registrar;
     private readonly ISectionContentBuilder _contentBuilder;
     private readonly IProviderLogoService _logoService;
+    private readonly IPosterService _posterService;
     private readonly ILogger<AdminController> _logger;
 
     /// <summary>
@@ -38,6 +39,7 @@ public class AdminController : ControllerBase
     /// <param name="registrar">Home Screen Sections registrar.</param>
     /// <param name="contentBuilder">Section content builder.</param>
     /// <param name="logoService">Provider logo cache.</param>
+    /// <param name="posterService">External title poster cache.</param>
     /// <param name="logger">Logger.</param>
     public AdminController(
         ITmdbApiClient tmdbClient,
@@ -45,6 +47,7 @@ public class AdminController : ControllerBase
         IHomeSectionsRegistrar registrar,
         ISectionContentBuilder contentBuilder,
         IProviderLogoService logoService,
+        IPosterService posterService,
         ILogger<AdminController> logger)
     {
         _tmdbClient = tmdbClient;
@@ -52,6 +55,7 @@ public class AdminController : ControllerBase
         _registrar = registrar;
         _contentBuilder = contentBuilder;
         _logoService = logoService;
+        _posterService = posterService;
         _logger = logger;
     }
 
@@ -418,6 +422,123 @@ public class AdminController : ControllerBase
                 posterPath = r.PosterPath,
             }),
         });
+    }
+
+    /// <summary>
+    /// Runs a saved section's Discover query, without touching its cache.
+    /// The sibling <c>test-query</c> route does the same for a section the admin
+    /// is still filling in and has not saved yet.
+    /// </summary>
+    /// <param name="id">The section id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The generated query and what it returned.</returns>
+    [HttpPost("sections/{id}/test-query")]
+    public async Task<ActionResult> TestSectionQuery(string id, CancellationToken cancellationToken)
+    {
+        var section = FindSection(id);
+        if (section is null)
+        {
+            return NotFound();
+        }
+
+        var results = await _tmdbClient.DiscoverAllAsync(section, cancellationToken).ConfigureAwait(false);
+
+        return Ok(new
+        {
+            query = DiscoverQueryBuilder.BuildDisplayString(section, 1),
+            count = results.Count,
+            items = results.Take(12).Select(r => new
+            {
+                id = r.Id,
+                title = r.Title,
+                year = r.ReleaseDate?.Length >= 4 ? r.ReleaseDate[..4] : null,
+                voteAverage = r.VoteAverage,
+                posterPath = r.PosterPath,
+            }),
+        });
+    }
+
+    /// <summary>
+    /// Previews what a section would put on the home screen, marking which
+    /// titles resolve against the local library.
+    /// </summary>
+    /// <param name="id">The section id.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The resolved items.</returns>
+    [HttpGet("sections/{id}/preview")]
+    public async Task<ActionResult> PreviewSection(string id, CancellationToken cancellationToken)
+    {
+        var section = FindSection(id);
+        if (section is null)
+        {
+            return NotFound();
+        }
+
+        // No user: this is an administrator preview of the section itself, not of
+        // what any particular account would be allowed to see.
+        var items = await _contentBuilder.BuildAsync(section, null, cancellationToken).ConfigureAwait(false);
+
+        return Ok(new
+        {
+            items = items.Take(24).Select(item =>
+            {
+                var providerIds = item.ProviderIds ?? new Dictionary<string, string>();
+                var isLocal = !providerIds.ContainsKey(LibraryResolver.ExternalMarkerKey);
+
+                return new
+                {
+                    name = item.Name,
+                    isLocal,
+                    posterUrl = isLocal
+                        ? $"/Items/{item.Id:N}/Images/Primary?maxHeight=300"
+                        // Fully qualified: ControllerBase already has a
+                        // MetadataProvider member and it shadows the enum here.
+                        : providerIds.TryGetValue(
+                            MediaBrowser.Model.Entities.MetadataProvider.Tmdb.ToString(),
+                            out var tmdbId)
+                            ? $"/JellyProviderSections/Poster/{tmdbId}"
+                            : null,
+                };
+            }),
+        });
+    }
+
+    /// <summary>
+    /// Drops every section's cached results and rebuilds them, so the next home
+    /// screen load is served from fresh TMDb data.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>How many sections were refreshed.</returns>
+    [HttpPost("sync-now")]
+    public async Task<ActionResult> SyncNow(CancellationToken cancellationToken)
+    {
+        var sections = Config.Sections.Where(s => s.Enabled).ToList();
+        var refreshed = 0;
+
+        foreach (var section in sections)
+        {
+            _contentBuilder.InvalidateSection(section.Id);
+
+            try
+            {
+                await _contentBuilder.BuildAsync(section, null, cancellationToken).ConfigureAwait(false);
+                refreshed++;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // One failing section must not stop the others; the per-section
+                // outcome is already recorded on the section itself.
+                _logger.LogError(ex, "[ProviderSections] Sync failed for section {Id}", section.Id);
+            }
+        }
+
+        Plugin.Instance?.SavePluginConfiguration(Config);
+
+        return Ok(new { refreshed, total = sections.Count });
     }
 
     /// <summary>Clears a section's cached results.</summary>
