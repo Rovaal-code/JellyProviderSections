@@ -208,6 +208,10 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             // for. HSS reads this as the section's default; an admin can still
             // override it per section from its own settings page.
             ["viewMode"] = "Portrait",
+            // No details menu: it acts on an item the server does not have for
+            // every external card. The home script hides the rest of Jellyfin's
+            // hover overlay; this covers the window before it has run.
+            ["showDetailsMenu"] = false,
             // Must be the FULL assembly name including version and culture: HSS
             // matches it with `Assembly.FullName == payload.ResultsAssembly`, so
             // the short name silently finds nothing and the row renders empty.

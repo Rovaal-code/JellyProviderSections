@@ -59,6 +59,8 @@ Home Screen Sections elige su renderizador de tarjetas con carátula **por clave
 
 Esto añade una dependencia directa de File Transformation que la investigación había descartado; ver la actualización en `research/04-home-screen-sections-integration.md` §4. Jellyfin Enhanced sigue siendo opcional: sin él la tarjeta se dibuja igual y el clic no hace nada, en lugar de navegar a una ficha inexistente.
 
+El script oculta además el overlay de botones que Jellyfin dibuja al pasar el cursor (reproducir, marcar como visto, favorito y menú) **solo en las filas de este plugin**: en una tarjeta externa esos botones actúan sobre algo que el servidor no tiene, y en una fila de catálogo son ruido visual. El registro pasa también `showDetailsMenu: false`, que cubre el intervalo entre que carga la página y corre el script. Los títulos locales de esas filas siguen abriendo su ficha real de Jellyfin.
+
 ### Pendientes
 
 - **Medición de rendimiento con biblioteca grande** (criterio 34): la biblioteca sintética tiene 6 títulos.

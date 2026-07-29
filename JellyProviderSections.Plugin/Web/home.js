@@ -31,6 +31,36 @@
     var MARKER_START = 8;
     var MARKER_END = 16;
     var DECORATED = 'jpsDecorated';
+    var ROW_CLASS = 'jps-section-row';
+    var STYLE_ID = 'jps-home-style';
+
+    /* Jellyfin's card builder puts a hover overlay on every card: play, mark as
+       played, favourite, and a details menu. On an external card all of those
+       act on something the server does not have, and on a catalogue row they are
+       visual noise either way, so the whole overlay goes. The rows are marked
+       from the cards that carry our marker, which also covers the local titles
+       sitting next to them, so a row never hovers two different ways.
+
+       Jellyfin Enhanced neutralises the same overlay on the cards it builds
+       itself, for the same reason. */
+    function injectStyle() {
+        if (document.getElementById(STYLE_ID)) {
+            return;
+        }
+
+        var style = document.createElement('style');
+        style.id = STYLE_ID;
+        style.textContent =
+            '.' + ROW_CLASS + ' .cardOverlayContainer { display: none !important; }';
+        document.head.appendChild(style);
+    }
+
+    function markRow(card) {
+        var row = card.closest ? card.closest('.verticalSection') : null;
+        if (row && !row.classList.contains(ROW_CLASS)) {
+            row.classList.add(ROW_CLASS);
+        }
+    }
 
     function externalItemInfo(id) {
         if (!id || id.length !== 32 || id.slice(MARKER_START, MARKER_END) !== MARKER) {
@@ -101,6 +131,7 @@
         }
 
         card.dataset[DECORATED] = '1';
+        markRow(card);
 
         /* The class and these two attributes are the contract Jellyfin
            Enhanced's HSS discovery handler listens for. Matching it is what
@@ -136,6 +167,7 @@
     }
 
     function start() {
+        injectStyle();
         scan(document.body);
 
         var Observer = window.MutationObserver || window.WebKitMutationObserver;
