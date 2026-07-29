@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -25,10 +26,19 @@ namespace Jellyfin.Plugin.JellyProviderSections.Services;
 /// </summary>
 public interface IPosterService
 {
-    /// <summary>Records the TMDb poster path for a title, so it can be served later.</summary>
+    /// <summary>Records what a title needs for its card, so it can be served later.</summary>
     /// <param name="tmdbId">The TMDb id.</param>
     /// <param name="posterPath">The TMDb poster path.</param>
-    void Remember(int tmdbId, string posterPath);
+    /// <param name="voteAverage">The TMDb vote average, shown on the card.</param>
+    void Remember(int tmdbId, string posterPath, double voteAverage);
+
+    /// <summary>
+    /// Gets the TMDb rating for each of the given titles, skipping the unknown.
+    /// Answered in one call per row rather than one per card.
+    /// </summary>
+    /// <param name="tmdbIds">The TMDb ids to look up.</param>
+    /// <returns>Rating by TMDb id.</returns>
+    IReadOnlyDictionary<int, double> GetRatings(IEnumerable<int> tmdbIds);
 
     /// <summary>Gets a title's poster, downloading and caching on first use.</summary>
     /// <param name="tmdbId">The TMDb id.</param>
@@ -53,6 +63,7 @@ public sealed class PosterService : IPosterService
     private const int MaxRememberedPaths = 5000;
 
     private readonly ConcurrentDictionary<int, string> _posterPaths = new();
+    private readonly ConcurrentDictionary<int, double> _ratings = new();
     private readonly ITmdbApiClient _tmdbClient;
     private readonly IApplicationPaths _applicationPaths;
     private readonly ILogger<PosterService> _logger;
@@ -77,7 +88,7 @@ public sealed class PosterService : IPosterService
         Path.Combine(_applicationPaths.PluginConfigurationsPath, "JellyProviderSections", "posters");
 
     /// <inheritdoc />
-    public void Remember(int tmdbId, string posterPath)
+    public void Remember(int tmdbId, string posterPath, double voteAverage)
     {
         if (tmdbId <= 0 || string.IsNullOrWhiteSpace(posterPath))
         {
@@ -87,9 +98,33 @@ public sealed class PosterService : IPosterService
         if (_posterPaths.Count >= MaxRememberedPaths && !_posterPaths.ContainsKey(tmdbId))
         {
             _posterPaths.Clear();
+            _ratings.Clear();
         }
 
         _posterPaths[tmdbId] = posterPath;
+
+        if (voteAverage > 0)
+        {
+            _ratings[tmdbId] = voteAverage;
+        }
+    }
+
+    /// <inheritdoc />
+    public IReadOnlyDictionary<int, double> GetRatings(IEnumerable<int> tmdbIds)
+    {
+        ArgumentNullException.ThrowIfNull(tmdbIds);
+
+        var found = new Dictionary<int, double>();
+
+        foreach (var id in tmdbIds)
+        {
+            if (_ratings.TryGetValue(id, out var rating))
+            {
+                found[id] = rating;
+            }
+        }
+
+        return found;
     }
 
     /// <inheritdoc />

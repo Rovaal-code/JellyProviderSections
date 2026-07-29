@@ -961,6 +961,7 @@
         const services = [
             {
                 name: 'TMDb',
+                logo: 'movie_filter',
                 required: true,
                 ok: !!(tmdb.enabled && tmdb.hasApiKey),
                 detail: !tmdb.hasApiKey
@@ -969,6 +970,7 @@
             },
             {
                 name: 'Seerr',
+                logo: 'playlist_add_check',
                 required: false,
                 ok: !!(seerr.enabled && seerr.hasApiKey && seerr.serverUrl),
                 detail: !(seerr.hasApiKey && seerr.serverUrl)
@@ -980,13 +982,21 @@
         services.forEach(s => {
             const kind = s.ok ? 'ok' : (s.required ? 'error' : 'warn');
             const item = el('div', 'jps-overview-item jps-overview-' + kind);
-            item.appendChild(icon(s.ok ? 'check_circle' : (s.required ? 'error' : 'info'),
-                'jps-overview-icon'));
+
+            item.appendChild(icon(s.logo, 'jps-overview-logo'));
 
             const text = el('div', 'jps-overview-text');
             text.appendChild(el('span', 'jps-overview-name', s.name));
             text.appendChild(el('span', 'jps-overview-detail', s.detail));
             item.appendChild(text);
+
+            // The state is carried by the dot, which pulses when connected, so
+            // it reads as reporting in rather than as a static tick.
+            const dot = el('span', 'jps-overview-dot');
+            dot.setAttribute('role', 'img');
+            dot.setAttribute('aria-label', s.name + ': ' + s.detail);
+            item.appendChild(dot);
+
             container.appendChild(item);
         });
 

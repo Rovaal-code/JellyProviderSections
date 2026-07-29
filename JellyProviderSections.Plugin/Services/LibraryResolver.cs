@@ -223,7 +223,7 @@ public sealed class LibraryResolver : ILibraryResolver
 
             // The home script only learns a card's TMDb id, so the path has to be
             // on the server by the time it asks for the artwork.
-            _posterService.Remember(item.Id, item.PosterPath);
+            _posterService.Remember(item.Id, item.PosterPath, item.VoteAverage);
         }
 
         if (DateTime.TryParse(

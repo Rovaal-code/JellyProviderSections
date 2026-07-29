@@ -1088,67 +1088,119 @@
     }
 }
 
-/* ── Integration state strip (sections tab) ─────────────────── */
+/* ── Integration state (sections tab) ───────────────────────────
+   Same shape as JellyNotify's service strip: a small card per service,
+   tinted by state, with a pulse ring on the connected one so it reads as
+   "reporting in" rather than a static tick. */
 
 .jps-overview {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
     gap: 0.75rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 }
 
 .jps-overview-item {
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    padding: 0.6rem 0.9rem;
-    background: var(--jps-surface);
-    border: 1px solid var(--jps-border);
+    padding: 0.65rem 0.8rem;
     border-radius: var(--jps-radius-sm);
+    background: var(--jps-tint-soft);
+    border: 1px solid var(--jps-border);
+    opacity: 0.75;
+    transition: background var(--jps-transition), border-color var(--jps-transition), opacity var(--jps-transition);
 }
 
-.jps-overview-icon {
-    font-size: 1.3rem;
-    line-height: 1;
-    flex-shrink: 0;
-}
-
-.jps-overview-ok .jps-overview-icon {
-    color: var(--jps-success);
-}
-
-.jps-overview-warn .jps-overview-icon {
-    color: var(--jps-warning);
+.jps-overview-ok {
+    opacity: 1;
+    background: rgba(56, 240, 184, 0.1);
+    border-color: rgba(56, 240, 184, 0.35);
 }
 
 /* A missing TMDb key is not a warning, it is the reason nothing will render. */
 .jps-overview-error {
-    border-color: rgba(255, 85, 119, 0.45);
+    background: rgba(255, 85, 119, 0.08);
+    border-color: rgba(255, 85, 119, 0.3);
 }
 
-.jps-overview-error .jps-overview-icon {
-    color: var(--jps-danger);
+.jps-overview-warn {
+    background: rgba(255, 187, 85, 0.08);
+    border-color: rgba(255, 187, 85, 0.3);
+}
+
+.jps-overview-logo {
+    font-size: 1.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+    color: var(--jps-text-muted);
+}
+
+.jps-overview-ok .jps-overview-logo {
+    color: var(--jps-accent);
 }
 
 .jps-overview-text {
     display: flex;
     flex-direction: column;
-    line-height: 1.25;
+    flex: 1;
+    min-width: 0;
+    line-height: 1.3;
 }
 
 .jps-overview-name {
     font-family: var(--jps-font-display);
     font-size: 0.85rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--jps-text);
 }
 
 .jps-overview-detail {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     color: var(--jps-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.jps-overview-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    position: relative;
+    background: var(--jps-danger);
+}
+
+.jps-overview-warn .jps-overview-dot {
+    background: var(--jps-warning);
+}
+
+.jps-overview-ok .jps-overview-dot {
+    background: var(--jps-success);
+}
+
+.jps-overview-ok .jps-overview-dot::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    border: 1px solid var(--jps-success);
+    animation: jps-status-pulse 1.8s ease-out infinite;
+}
+
+@keyframes jps-status-pulse {
+    0% { transform: scale(0.5); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .jps-overview-ok .jps-overview-dot::after {
+        animation: none;
+    }
 }
 
 .jps-overview-action {
-    margin-left: auto;
+    grid-column: 1 / -1;
+    justify-self: start;
 }

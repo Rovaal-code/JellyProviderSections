@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,6 +97,39 @@ public sealed class WebAssetsController : ControllerBase
 
         Response.Headers.CacheControl = "public, max-age=604800";
         return File(poster.Content, poster.ContentType);
+    }
+
+    /// <summary>
+    /// Gets the TMDb rating of several titles at once.
+    ///
+    /// The home script needs the rating to finish a card, and it knows only the
+    /// TMDb id. One call per row rather than one per card: a row holds up to two
+    /// hundred of them.
+    /// </summary>
+    /// <param name="ids">Comma-separated TMDb ids.</param>
+    /// <returns>Rating by TMDb id, omitting the ones not known.</returns>
+    [HttpGet("Ratings")]
+    public ActionResult GetRatings([FromQuery] string? ids)
+    {
+        if (string.IsNullOrWhiteSpace(ids))
+        {
+            return Ok(new Dictionary<string, double>());
+        }
+
+        var parsed = ids
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(part => int.TryParse(part, NumberStyles.Integer, CultureInfo.InvariantCulture, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .Distinct()
+            .Take(500)
+            .ToList();
+
+        var ratings = _posterService.GetRatings(parsed);
+
+        Response.Headers.CacheControl = "no-cache";
+        return Ok(ratings.ToDictionary(
+            r => r.Key.ToString(CultureInfo.InvariantCulture),
+            r => r.Value));
     }
 
     private ActionResult GetEmbeddedResource(string fileName, string contentType)
