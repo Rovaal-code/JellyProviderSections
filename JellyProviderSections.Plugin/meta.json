@@ -5,8 +5,8 @@
   "imageUrl": "",
   "name": "Jellyfin Provider Sections",
   "overview": "Lets an administrator create provider-based streaming sections (e.g. \"Popular on Crunchyroll\") for the Jellyfin home screen, backed by TMDb Discover, resolved against the local library, with Seerr request support.",
-  "owner": "",
+  "owner": "Rovaal-code",
   "targetAbi": "10.11.0.0",
-  "timestamp": "2026-07-28T00:00:00Z",
-  "version": "0.0.1.0"
+  "timestamp": "2026-07-29T00:00:00Z",
+  "version": "0.1.0.0"
 }
