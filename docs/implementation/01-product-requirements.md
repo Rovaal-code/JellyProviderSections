@@ -26,7 +26,7 @@ Incluye: gestión completa de definiciones de sección (crear/editar/duplicar/ac
 ## Fuera de alcance (explícitamente, por instrucción directa del encargo)
 
 - Cualquier campo, filtro, modelo o criterio de monetización (suscripción, gratis, con anuncios, alquiler, compra, `with_watch_monetization_types` o equivalente).
-- Modo mixto películas+series en una misma fila (decisión ya confirmada: se excluye por no existir un algoritmo de mezcla suficientemente determinista, ver `research/05` §Películas y series combinadas).
+- ~~Modo mixto películas+series en una misma fila~~ **Implementado el 2026-07-29 a petición del usuario.** Se excluía por no existir un algoritmo de mezcla determinista. El desbloqueo fue no buscarlo: TMDb no tiene endpoint combinado y su `popularity` no es comparable entre `discover/movie` y `discover/tv`, así que ordenar la unión por esa métrica deja que un tipo entierre al otro. La sección lanza las dos consultas y las **intercala una a una**, cada lista conservando su propio orden. No necesita métrica común, es estable entre ejecuciones y mantiene los dos tipos visibles en la cabeza de la fila. Si una de las dos devuelve menos, la otra rellena el resto.
 - Soporte de clientes Jellyfin distintos de Jellyfin Web de escritorio/navegador (es el único cliente que renderiza Home Screen Sections de forma nativa hoy).
 - Modificación del código de JellyNotify o de cualquiera de los plugins de terceros (HSS, File Transformation, Pages, Jellyfin Enhanced) — solo integración en tiempo de ejecución.
 - Instancia de producción real de Jellyfin/Seerr — todo el desarrollo y prueba ocurre en el entorno aislado `testenv/` (dentro de este repo).
@@ -56,7 +56,7 @@ Incluye: gestión completa de definiciones de sección (crear/editar/duplicar/ac
 | Selección interactiva de temporadas al solicitar | **Versión inicial recomendable** | El contrato lo soporta (`seasons: number[]`), pero la UI de selección temporada-a-temporada es una superficie de trabajo adicional no crítica para el primer release; el botón principal ("todas las temporadas") cubre el caso de uso mayoritario |
 | i18n (en-US/es-ES/ca, como JellyNotify) | **Extensión posterior** | No pedido explícitamente en el encargo; JellyNotify ya tiene el patrón listo para reutilizar cuando se decida |
 | Autoactualización (`GitHubReleaseChecker`) | **Extensión posterior** | Comodidad operativa, no funcionalidad central |
-| Modo mixto películas+series | **Fuera de alcance (no "extensión posterior")** | Requiere una decisión de diseño de mezcla que la investigación no pudo cerrar con determinismo suficiente; si en el futuro se retoma, necesita su propia investigación de UX, no es una simple extensión incremental |
+| Modo mixto películas+series | **Implementado (2026-07-29)** | Ya no requiere el algoritmo de mezcla que bloqueaba la decisión: se intercalan las dos consultas una a una en vez de fusionarlas por una puntuación común. Ver el detalle arriba |
 | Cuotas/aprobación avanzada más allá de lo que ya ofrece Seerr | **Fuera de alcance** | El plugin no reimplementa lógica de permisos/cuota — delega enteramente en Seerr, que ya la resuelve (`research/06`) |
 
 ## Criterio de "hecho" para el MVP

@@ -57,12 +57,21 @@ public static class DiscoverQueryBuilder
     /// </summary>
     /// <param name="section">The section definition.</param>
     /// <param name="page">The 1-based page number.</param>
+    /// <param name="contentTypeOverride">
+    /// The endpoint this query is for. A mixed section has no single content
+    /// type of its own: it issues one query per type, and each needs the
+    /// parameter names of its own endpoint.
+    /// </param>
     /// <returns>The query parameters, in a stable order.</returns>
-    public static IReadOnlyList<KeyValuePair<string, string>> Build(SectionDefinition section, int page)
+    public static IReadOnlyList<KeyValuePair<string, string>> Build(
+        SectionDefinition section,
+        int page,
+        ProviderSectionContentType? contentTypeOverride = null)
     {
         ArgumentNullException.ThrowIfNull(section);
 
-        var isMovie = section.ContentType == ProviderSectionContentType.Movie;
+        var contentType = contentTypeOverride ?? section.ContentType;
+        var isMovie = contentType == ProviderSectionContentType.Movie;
         var query = new List<KeyValuePair<string, string>>();
 
         void Add(string key, string? value)
@@ -82,7 +91,7 @@ public static class DiscoverQueryBuilder
         }
 
         Add("language", section.MetadataLanguage);
-        Add("sort_by", GetSortBy(section.SortBy, section.ContentType));
+        Add("sort_by", GetSortBy(section.SortBy, contentType));
         Add("page", page.ToString(CultureInfo.InvariantCulture));
 
         if (section.IncludeGenreIds.Count > 0)
@@ -131,8 +140,26 @@ public static class DiscoverQueryBuilder
     /// <returns>The endpoint path plus query string.</returns>
     public static string BuildDisplayString(SectionDefinition section, int page)
     {
-        var parameters = Build(section, page);
+        ArgumentNullException.ThrowIfNull(section);
+
+        // A mixed section really does issue two requests, so showing one would
+        // misrepresent what the admin is about to run.
+        if (section.ContentType == ProviderSectionContentType.Mixed)
+        {
+            return BuildDisplayString(section, page, ProviderSectionContentType.Movie)
+                + "\n" + BuildDisplayString(section, page, ProviderSectionContentType.Series);
+        }
+
+        return BuildDisplayString(section, page, section.ContentType);
+    }
+
+    private static string BuildDisplayString(
+        SectionDefinition section,
+        int page,
+        ProviderSectionContentType contentType)
+    {
+        var parameters = Build(section, page, contentType);
         var queryString = string.Join("&", parameters.Select(p => $"{p.Key}={Uri.EscapeDataString(p.Value)}"));
-        return $"{GetEndpoint(section.ContentType)}?{queryString}";
+        return $"{GetEndpoint(contentType)}?{queryString}";
     }
 }

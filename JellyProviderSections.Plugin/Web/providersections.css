@@ -1087,3 +1087,68 @@
         align-items: stretch;
     }
 }
+
+/* ── Integration state strip (sections tab) ─────────────────── */
+
+.jps-overview {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.jps-overview-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--jps-surface);
+    border: 1px solid var(--jps-border);
+    border-radius: var(--jps-radius-sm);
+}
+
+.jps-overview-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.jps-overview-ok .jps-overview-icon {
+    color: var(--jps-success);
+}
+
+.jps-overview-warn .jps-overview-icon {
+    color: var(--jps-warning);
+}
+
+/* A missing TMDb key is not a warning, it is the reason nothing will render. */
+.jps-overview-error {
+    border-color: rgba(255, 85, 119, 0.45);
+}
+
+.jps-overview-error .jps-overview-icon {
+    color: var(--jps-danger);
+}
+
+.jps-overview-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+}
+
+.jps-overview-name {
+    font-family: var(--jps-font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--jps-text);
+}
+
+.jps-overview-detail {
+    font-size: 0.75rem;
+    color: var(--jps-text-muted);
+}
+
+.jps-overview-action {
+    margin-left: auto;
+}

@@ -64,16 +64,24 @@ public sealed class TmdbApiClient : ITmdbApiClient
     private static string? ApiKey => Plugin.Instance?.Configuration?.TmdbSettings?.ApiKey;
 
     /// <inheritdoc />
-    public async Task<TmdbConnectionResult> TestConnectionAsync(CancellationToken cancellationToken)
+    public async Task<TmdbConnectionResult> TestConnectionAsync(
+        string? apiKeyOverride,
+        CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(ApiKey))
+        var key = string.IsNullOrWhiteSpace(apiKeyOverride) ? ApiKey : apiKeyOverride.Trim();
+
+        if (string.IsNullOrWhiteSpace(key))
         {
             return new TmdbConnectionResult(false, "No hay ninguna API key de TMDb configurada.");
         }
 
         try
         {
-            using var response = await SendAsync("configuration", null, cancellationToken).ConfigureAwait(false);
+            // Built here rather than through SendAsync, which always signs with
+            // the stored key; the point of the override is to try one that is not
+            // stored yet.
+            var url = $"{BaseUrl}configuration?api_key={Uri.EscapeDataString(key)}";
+            using var response = await _httpClient.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
@@ -182,11 +190,18 @@ public sealed class TmdbApiClient : ITmdbApiClient
 
     /// <inheritdoc />
     public Task<TmdbDiscoverPage?> DiscoverAsync(SectionDefinition section, int page, CancellationToken cancellationToken)
+        => DiscoverAsync(section, page, section.ContentType, cancellationToken);
+
+    private Task<TmdbDiscoverPage?> DiscoverAsync(
+        SectionDefinition section,
+        int page,
+        ProviderSectionContentType contentType,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(section);
 
-        var endpoint = DiscoverQueryBuilder.GetEndpoint(section.ContentType);
-        var query = DiscoverQueryBuilder.Build(section, page);
+        var endpoint = DiscoverQueryBuilder.GetEndpoint(contentType);
+        var query = DiscoverQueryBuilder.Build(section, page, contentType);
 
         return GetJsonAsync<TmdbDiscoverPage>(endpoint, query, cancellationToken);
     }
@@ -198,6 +213,59 @@ public sealed class TmdbApiClient : ITmdbApiClient
     {
         ArgumentNullException.ThrowIfNull(section);
 
+        if (section.ContentType == ProviderSectionContentType.Mixed)
+        {
+            return await DiscoverMixedAsync(section, cancellationToken).ConfigureAwait(false);
+        }
+
+        return await DiscoverSingleAsync(section, section.ContentType, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Runs the movie and the series query and interleaves them one for one.
+    ///
+    /// Each list keeps its own ranking; they are not merged by a shared score,
+    /// because TMDb's popularity is not comparable between the two endpoints and
+    /// sorting the union by it simply lets one type bury the other. Alternating
+    /// needs no cross-type metric, is stable between runs, and keeps both types
+    /// visible at the head of the row, which is the whole point of a mixed one.
+    /// If one side comes back short, the other fills the remainder rather than
+    /// leaving the row half empty.
+    /// </summary>
+    private async Task<IReadOnlyList<TmdbDiscoverItem>> DiscoverMixedAsync(
+        SectionDefinition section,
+        CancellationToken cancellationToken)
+    {
+        var wanted = Math.Max(1, section.MaxItems);
+
+        var movies = await DiscoverSingleAsync(section, ProviderSectionContentType.Movie, cancellationToken)
+            .ConfigureAwait(false);
+        var series = await DiscoverSingleAsync(section, ProviderSectionContentType.Series, cancellationToken)
+            .ConfigureAwait(false);
+
+        var merged = new List<TmdbDiscoverItem>(wanted);
+
+        for (var i = 0; merged.Count < wanted && (i < movies.Count || i < series.Count); i++)
+        {
+            if (i < movies.Count)
+            {
+                merged.Add(movies[i]);
+            }
+
+            if (merged.Count < wanted && i < series.Count)
+            {
+                merged.Add(series[i]);
+            }
+        }
+
+        return merged;
+    }
+
+    private async Task<IReadOnlyList<TmdbDiscoverItem>> DiscoverSingleAsync(
+        SectionDefinition section,
+        ProviderSectionContentType contentType,
+        CancellationToken cancellationToken)
+    {
         var wanted = Math.Max(1, section.MaxItems);
         var pagesNeeded = Math.Min(
             MaxPagesPerSection,
@@ -210,7 +278,7 @@ public sealed class TmdbApiClient : ITmdbApiClient
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var result = await DiscoverAsync(section, page, cancellationToken).ConfigureAwait(false);
+            var result = await DiscoverAsync(section, page, contentType, cancellationToken).ConfigureAwait(false);
             if (result is null)
             {
                 // Partial failure: return what we have rather than nothing, the

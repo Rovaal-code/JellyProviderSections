@@ -27,10 +27,19 @@ namespace Jellyfin.Plugin.JellyProviderSections.Services;
 /// </summary>
 public interface ISeerrApiClient
 {
-    /// <summary>Verifies the configured URL and API key.</summary>
+    /// <summary>Verifies a URL and API key.</summary>
+    /// <param name="serverUrlOverride">URL to test instead of the stored one, or null.</param>
+    /// <param name="apiKeyOverride">
+    /// Key to test instead of the stored one, or null. Together these let the
+    /// admin check what is typed into the form before committing it; requiring a
+    /// save first has it exactly backwards.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The connection result.</returns>
-    Task<SeerrConnectionResult> TestConnectionAsync(CancellationToken cancellationToken);
+    Task<SeerrConnectionResult> TestConnectionAsync(
+        string? serverUrlOverride,
+        string? apiKeyOverride,
+        CancellationToken cancellationToken);
 
     /// <summary>Gets a title's availability, or null when Seerr has no record.</summary>
     /// <param name="contentType">Movie or series.</param>
@@ -114,21 +123,40 @@ public sealed class SeerrApiClient : ISeerrApiClient
         && !string.IsNullOrWhiteSpace(Settings.ApiKey);
 
     /// <inheritdoc />
-    public async Task<SeerrConnectionResult> TestConnectionAsync(CancellationToken cancellationToken)
+    public async Task<SeerrConnectionResult> TestConnectionAsync(
+        string? serverUrlOverride,
+        string? apiKeyOverride,
+        CancellationToken cancellationToken)
     {
-        if (Settings is null || string.IsNullOrWhiteSpace(Settings.ServerUrl))
+        var serverUrl = string.IsNullOrWhiteSpace(serverUrlOverride)
+            ? Settings?.ServerUrl
+            : serverUrlOverride.Trim();
+
+        var apiKey = string.IsNullOrWhiteSpace(apiKeyOverride)
+            ? Settings?.ApiKey
+            : apiKeyOverride.Trim();
+
+        if (string.IsNullOrWhiteSpace(serverUrl))
         {
             return new SeerrConnectionResult(false, "No hay ninguna URL de Seerr configurada.");
         }
 
-        if (string.IsNullOrWhiteSpace(Settings.ApiKey))
+        if (string.IsNullOrWhiteSpace(apiKey))
         {
             return new SeerrConnectionResult(false, "No hay ninguna API key de Seerr configurada.");
         }
 
+        // Same guard the save path applies: a non-HTTP scheme here would turn an
+        // admin typo into a request to somewhere it has no business reaching.
+        if (!Uri.TryCreate(serverUrl, UriKind.Absolute, out var parsed)
+            || (parsed.Scheme != Uri.UriSchemeHttp && parsed.Scheme != Uri.UriSchemeHttps))
+        {
+            return new SeerrConnectionResult(false, "La URL de Seerr debe empezar por http:// o https://");
+        }
+
         try
         {
-            using var request = BuildRequest(HttpMethod.Get, "settings/main", null);
+            using var request = BuildRequest(HttpMethod.Get, "settings/main", null, serverUrl, apiKey);
             using var response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
@@ -420,12 +448,22 @@ public sealed class SeerrApiClient : ISeerrApiClient
         }
     }
 
-    private static HttpRequestMessage BuildRequest(HttpMethod method, string path, int? asUserId)
+    private static HttpRequestMessage BuildRequest(
+        HttpMethod method,
+        string path,
+        int? asUserId,
+        string? serverUrlOverride = null,
+        string? apiKeyOverride = null)
     {
-        var baseUrl = (Settings?.ServerUrl ?? string.Empty).TrimEnd('/');
+        // Overrides are only ever passed by the connection test, so it can check
+        // credentials the admin has typed but not saved.
+        var baseUrl = ((string.IsNullOrWhiteSpace(serverUrlOverride) ? Settings?.ServerUrl : serverUrlOverride)
+            ?? string.Empty).TrimEnd('/');
         var request = new HttpRequestMessage(method, $"{baseUrl}/api/v1/{path}");
 
-        request.Headers.TryAddWithoutValidation("X-Api-Key", Settings?.ApiKey ?? string.Empty);
+        request.Headers.TryAddWithoutValidation(
+            "X-Api-Key",
+            (string.IsNullOrWhiteSpace(apiKeyOverride) ? Settings?.ApiKey : apiKeyOverride) ?? string.Empty);
 
         if (asUserId.HasValue)
         {

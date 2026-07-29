@@ -141,18 +141,28 @@ public class AdminController : ControllerBase
     }
 
     /// <summary>Tests the TMDb connection.</summary>
+    /// <param name="request">Credentials to test, or null to use what is stored.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The test result.</returns>
     [HttpPost("test/tmdb")]
-    public async Task<ActionResult<TmdbConnectionResult>> TestTmdb(CancellationToken cancellationToken)
-        => Ok(await _tmdbClient.TestConnectionAsync(cancellationToken).ConfigureAwait(false));
+    public async Task<ActionResult<TmdbConnectionResult>> TestTmdb(
+        [FromBody] TestConnectionRequest? request,
+        CancellationToken cancellationToken)
+        => Ok(await _tmdbClient
+            .TestConnectionAsync(request?.TmdbApiKey, cancellationToken)
+            .ConfigureAwait(false));
 
     /// <summary>Tests the Seerr connection.</summary>
+    /// <param name="request">Credentials to test, or null to use what is stored.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The test result.</returns>
     [HttpPost("test/seerr")]
-    public async Task<ActionResult<SeerrConnectionResult>> TestSeerr(CancellationToken cancellationToken)
-        => Ok(await _seerrClient.TestConnectionAsync(cancellationToken).ConfigureAwait(false));
+    public async Task<ActionResult<SeerrConnectionResult>> TestSeerr(
+        [FromBody] TestConnectionRequest? request,
+        CancellationToken cancellationToken)
+        => Ok(await _seerrClient
+            .TestConnectionAsync(request?.SeerrServerUrl, request?.SeerrApiKey, cancellationToken)
+            .ConfigureAwait(false));
 
     /// <summary>Lists the TMDb watch-provider regions.</summary>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -749,7 +759,24 @@ public class AdminController : ControllerBase
     };
 }
 
-/// <summary>Body of the save-configuration request.</summary>
+/// <summary>
+/// Body of the connection tests. Every field is optional: whatever is absent
+/// falls back to what is stored, so the tests work both for credentials the
+/// admin has just typed and for the ones already saved.
+/// </summary>
+public class TestConnectionRequest
+{
+    /// <summary>Gets or sets the TMDb API key to test.</summary>
+    public string? TmdbApiKey { get; set; }
+
+    /// <summary>Gets or sets the Seerr base URL to test.</summary>
+    public string? SeerrServerUrl { get; set; }
+
+    /// <summary>Gets or sets the Seerr API key to test.</summary>
+    public string? SeerrApiKey { get; set; }
+}
+
+/// <summary>Body of the save connection settings request.</summary>
 public class SaveConfigRequest
 {
     /// <summary>Gets or sets a value indicating whether TMDb is enabled.</summary>

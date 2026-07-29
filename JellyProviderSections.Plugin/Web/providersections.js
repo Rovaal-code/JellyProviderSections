@@ -37,7 +37,8 @@
 
     const CONTENT_TYPES = [
         { value: 'Movie', label: 'Películas' },
-        { value: 'Series', label: 'Series' }
+        { value: 'Series', label: 'Series' },
+        { value: 'Mixed', label: 'Películas y series' }
     ];
 
     const SORT_OPTIONS = [
@@ -944,6 +945,67 @@
 
     // ─── Connections tab ──────────────────────────────────────────
 
+    /**
+     * Integration state at the top of the sections tab. Without a TMDb key
+     * nothing here can produce a single row, and that used to be invisible until
+     * the admin built a section and watched it come back empty.
+     */
+    function renderOverview(tmdb, seerr) {
+        const container = byId('jps-overview');
+        if (!container) {
+            return;
+        }
+
+        clear(container);
+
+        const services = [
+            {
+                name: 'TMDb',
+                required: true,
+                ok: !!(tmdb.enabled && tmdb.hasApiKey),
+                detail: !tmdb.hasApiKey
+                    ? 'Falta la clave de API'
+                    : (tmdb.enabled ? 'Configurado' : 'Configurado, desactivado')
+            },
+            {
+                name: 'Seerr',
+                required: false,
+                ok: !!(seerr.enabled && seerr.hasApiKey && seerr.serverUrl),
+                detail: !(seerr.hasApiKey && seerr.serverUrl)
+                    ? 'Sin configurar, las secciones funcionan en solo lectura'
+                    : (seerr.enabled ? 'Configurado' : 'Configurado, desactivado')
+            }
+        ];
+
+        services.forEach(s => {
+            const kind = s.ok ? 'ok' : (s.required ? 'error' : 'warn');
+            const item = el('div', 'jps-overview-item jps-overview-' + kind);
+            item.appendChild(icon(s.ok ? 'check_circle' : (s.required ? 'error' : 'info'),
+                'jps-overview-icon'));
+
+            const text = el('div', 'jps-overview-text');
+            text.appendChild(el('span', 'jps-overview-name', s.name));
+            text.appendChild(el('span', 'jps-overview-detail', s.detail));
+            item.appendChild(text);
+            container.appendChild(item);
+        });
+
+        // Only offer the shortcut when there is something to go and fix.
+        if (services.some(s => !s.ok)) {
+            const go = el('button', 'jps-btn jps-overview-action');
+            go.type = 'button';
+            go.appendChild(icon('link', 'jps-btn-icon'));
+            go.appendChild(el('span', null, 'Ir a Conexiones'));
+            go.addEventListener('click', () => {
+                const tab = document.querySelector('.jps-tab-btn[data-tab="connections"]');
+                if (tab) {
+                    tab.click();
+                }
+            });
+            container.appendChild(go);
+        }
+    }
+
     async function loadConfig() {
         const panel = byId('jps-connections-body');
         try {
@@ -964,6 +1026,8 @@
             // admin one is already stored without ever holding its value here.
             applySecretPlaceholder('jps-tmdb-key', tmdb.hasApiKey);
             applySecretPlaceholder('jps-seerr-key', seerr.hasApiKey);
+
+            renderOverview(tmdb, seerr);
 
             panel.classList.remove('jps-hidden');
             hide(byId('jps-connections-loading'));
@@ -1022,7 +1086,19 @@
         btn.disabled = true;
         setResult(result, 'Probando conexión...', null);
         try {
-            const data = await api('/Admin/test/' + service, { method: 'POST' });
+            // Send what is currently in the form so a key can be checked before
+            // it is saved. Blank fields fall back to the stored values server side.
+            const body = service === 'tmdb'
+                ? { tmdbApiKey: getValue('jps-tmdb-key') }
+                : {
+                    seerrServerUrl: getValue('jps-seerr-url'),
+                    seerrApiKey: getValue('jps-seerr-key')
+                };
+
+            const data = await api('/Admin/test/' + service, {
+                method: 'POST',
+                body: JSON.stringify(body)
+            });
             const ok = data === null || data.success === undefined ? true : data.success;
             const message = (data && (data.message || data.Message)) ||
                 (ok ? 'Conexión correcta.' : 'La conexión falló.');

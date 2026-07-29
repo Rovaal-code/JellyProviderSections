@@ -12,11 +12,16 @@ namespace Jellyfin.Plugin.JellyProviderSections.Services;
 public interface ITmdbApiClient
 {
     /// <summary>
-    /// Verifies the configured API key by calling a cheap endpoint.
+    /// Verifies an API key by calling a cheap endpoint.
     /// </summary>
+    /// <param name="apiKeyOverride">
+    /// The key to test instead of the stored one, or null to test what is saved.
+    /// This is what lets the admin check a key typed into the form before
+    /// committing it; requiring a save first has it exactly backwards.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A result describing success or the reason for failure.</returns>
-    Task<TmdbConnectionResult> TestConnectionAsync(CancellationToken cancellationToken);
+    Task<TmdbConnectionResult> TestConnectionAsync(string? apiKeyOverride, CancellationToken cancellationToken);
 
     /// <summary>
     /// Gets TMDb's image configuration (base URL and available sizes), cached.

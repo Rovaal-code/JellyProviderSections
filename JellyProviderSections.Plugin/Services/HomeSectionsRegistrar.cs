@@ -48,6 +48,8 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
     private const string HomeScreenSectionsAssemblyMarker = ".HomeScreenSections";
     private const string FileTransformationAssemblyMarker = ".FileTransformation";
     private const string PluginInterfaceTypeName = "Jellyfin.Plugin.HomeScreenSections.PluginInterface";
+    private const string HomeScreenSectionsPluginTypeName =
+        "Jellyfin.Plugin.HomeScreenSections.HomeScreenSectionsPlugin";
     private const string RegisterSectionMethodName = "RegisterSection";
 
     private readonly ILogger<HomeSectionsRegistrar> _logger;
@@ -125,6 +127,7 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             {
                 var payload = BuildPayload(section);
                 registerMethod.Invoke(null, new object?[] { payload });
+                EnsureSectionSettings(assembly, section);
                 registered++;
 
                 _logger.LogInformation(
@@ -187,6 +190,150 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
         if (migrated > 0)
         {
             Plugin.Instance?.SavePluginConfiguration(configuration);
+        }
+    }
+
+    /// <summary>
+    /// Creates the Home Screen Sections settings row for a section when it has
+    /// none, defaulting it to Portrait.
+    ///
+    /// Two problems this solves, both of which come from the same place. HSS
+    /// serves only sections that already have a settings row, and it creates
+    /// those rows in its own admin page rather than on registration, so a freshly
+    /// created section is invisible on the home screen until the administrator
+    /// visits Home Screen Sections' settings and presses save. And when that row
+    /// is finally created, its view mode comes from the section's own
+    /// DefaultViewMode, which for a plugin-registered section is Landscape; the
+    /// viewMode in the registration payload is not read for this. These are
+    /// catalogue posters, so Portrait is the right default.
+    ///
+    /// Only ever adds a missing row, never touches an existing one: once the
+    /// administrator has an opinion about a section, it is theirs. Any mismatch
+    /// in HSS's shape is swallowed, since failing here must not stop the section
+    /// from registering.
+    /// </summary>
+    private void EnsureSectionSettings(Assembly homeScreenSections, SectionDefinition section)
+    {
+        try
+        {
+            var pluginType = homeScreenSections.GetType(HomeScreenSectionsPluginTypeName);
+            var instance = pluginType?.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
+                ?.GetValue(null);
+
+            if (instance is null)
+            {
+                _logger.LogWarning(
+                    "[ProviderSections] {Type}.Instance was not reachable, so the Home Screen Sections settings "
+                    + "row could not be pre-created",
+                    HomeScreenSectionsPluginTypeName);
+                return;
+            }
+
+            var configuration = instance.GetType()
+                .GetProperty("Configuration", BindingFlags.Public | BindingFlags.Instance)
+                ?.GetValue(instance);
+
+            if (configuration is null)
+            {
+                _logger.LogWarning("[ProviderSections] Home Screen Sections exposed no Configuration property");
+                return;
+            }
+
+            if (configuration.GetType().GetProperty("SectionSettings")?.GetValue(configuration)
+                is not System.Collections.IList settings)
+            {
+                _logger.LogWarning(
+                    "[ProviderSections] Home Screen Sections' SectionSettings is not a list this build understands");
+                return;
+            }
+
+            foreach (var existing in settings)
+            {
+                var id = existing?.GetType().GetProperty("SectionId")?.GetValue(existing) as string;
+                if (string.Equals(id, section.Id, StringComparison.Ordinal))
+                {
+                    return;
+                }
+            }
+
+            // Taken from the declared property type rather than the instance:
+            // the backing field may well be a plain array or a custom collection,
+            // neither of which carries a generic argument to read.
+            var settingsType = configuration.GetType().GetProperty("SectionSettings")?.PropertyType
+                is { IsGenericType: true } declared
+                ? declared.GetGenericArguments()[0]
+                : settings.GetType().GetElementType();
+
+            if (settingsType is null || Activator.CreateInstance(settingsType) is not { } entry)
+            {
+                _logger.LogWarning(
+                    "[ProviderSections] Could not work out the type of Home Screen Sections' section settings "
+                    + "entries, so the row for {Id} was not pre-created",
+                    section.Id);
+                return;
+            }
+
+            void Set(string name, object? value)
+                => settingsType.GetProperty(name)?.SetValue(entry, value);
+
+            Set("SectionId", section.Id);
+            Set("Enabled", true);
+            Set("AllowUserOverride", true);
+            Set("LowerLimit", 1);
+            Set("UpperLimit", 1);
+            Set("OrderIndex", 999);
+            Set("HideWatchedItems", false);
+
+            var viewModeProperty = settingsType.GetProperty("ViewMode");
+            if (viewModeProperty is not null
+                && Enum.TryParse(viewModeProperty.PropertyType, "Portrait", out var portrait))
+            {
+                viewModeProperty.SetValue(entry, portrait);
+            }
+
+            // SectionSettings is an array in this build, so it cannot simply be
+            // appended to: grow a copy and assign it back. Handles a list too, in
+            // case that ever changes.
+            var settingsProperty = configuration.GetType().GetProperty("SectionSettings");
+
+            if (settings.IsFixedSize)
+            {
+                var grown = Array.CreateInstance(settingsType, settings.Count + 1);
+                settings.CopyTo(grown, 0);
+                grown.SetValue(entry, settings.Count);
+
+                if (settingsProperty?.CanWrite != true)
+                {
+                    _logger.LogWarning(
+                        "[ProviderSections] Home Screen Sections' SectionSettings is a fixed-size collection that "
+                        + "cannot be replaced, so the row for {Id} was not pre-created",
+                        section.Id);
+                    return;
+                }
+
+                settingsProperty.SetValue(configuration, grown);
+            }
+            else
+            {
+                settings.Add(entry);
+            }
+
+            instance.GetType()
+                .GetMethod("SaveConfiguration", BindingFlags.Public | BindingFlags.Instance, Type.EmptyTypes)
+                ?.Invoke(instance, null);
+
+            _logger.LogInformation(
+                "[ProviderSections] Created the Home Screen Sections settings row for {Name}, defaulting to Portrait",
+                section.DisplayName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "[ProviderSections] Could not pre-create the Home Screen Sections settings row for {Id}. "
+                + "The section still registers, but it will not appear until Home Screen Sections' own "
+                + "settings page is saved once.",
+                section.Id);
         }
     }
 

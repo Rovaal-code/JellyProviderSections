@@ -50,6 +50,11 @@
             <!-- ═══ Secciones ═══════════════════════════════════════ -->
             <div class="jps-tab-panel" data-panel="sections">
 
+                <!-- Integration state, so it is obvious from the first screen
+                     whether the sections can work at all. Same idea as the
+                     service strip on JellyNotify's overview. -->
+                <div class="jps-overview" id="jps-overview"></div>
+
                 <div class="jps-toolbar">
                     <div class="jps-toolbar-left">
                         <button type="button" class="jps-btn jps-btn-primary" id="jps-new-section">
@@ -85,6 +90,7 @@
                             <select class="jps-select" id="jps-f-contenttype">
                                 <option value="Series">Series</option>
                                 <option value="Movie">Películas</option>
+                                <option value="Mixed">Películas y series</option>
                             </select>
                         </div>
 

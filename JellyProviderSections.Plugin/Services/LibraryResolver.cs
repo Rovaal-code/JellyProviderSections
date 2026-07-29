@@ -101,7 +101,8 @@ public sealed class LibraryResolver : ILibraryResolver
 
         foreach (var item in items)
         {
-            var localItem = FindLocalItem(item.Id, section.ContentType, user);
+            // A mixed section holds both kinds, so the lookup follows the item.
+            var localItem = FindLocalItem(item.Id, item.ItemContentType, user);
 
             if (localItem is not null)
             {
@@ -194,7 +195,7 @@ public sealed class LibraryResolver : ILibraryResolver
     {
         var dto = new BaseItemDto
         {
-            Id = BuildDeterministicId(item.Id, section.ContentType),
+            Id = BuildDeterministicId(item.Id, item.ItemContentType),
             // Jellyfin Web's card builder throws "item or serverId cannot be null"
             // while laying out a Series card without it, and that exception takes
             // the whole row down: the section renders with its title and zero
@@ -205,7 +206,7 @@ public sealed class LibraryResolver : ILibraryResolver
             OriginalTitle = item.OriginalTitle,
             Overview = item.Overview,
             CommunityRating = (float)item.VoteAverage,
-            Type = section.ContentType == ProviderSectionContentType.Movie
+            Type = item.ItemContentType == ProviderSectionContentType.Movie
                 ? BaseItemKind.Movie
                 : BaseItemKind.Series,
             ProviderIds = new Dictionary<string, string>

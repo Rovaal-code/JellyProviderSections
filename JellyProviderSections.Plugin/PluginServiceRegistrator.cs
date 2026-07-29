@@ -18,9 +18,16 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
         // Shared cache for TMDb reference data, discover results and Seerr state.
         serviceCollection.AddMemoryCache();
 
-        // Typed HTTP clients.
-        serviceCollection.AddHttpClient<ITmdbApiClient, TmdbApiClient>();
-        serviceCollection.AddHttpClient<ISeerrApiClient, SeerrApiClient>();
+        // Typed HTTP clients, registered under explicit names.
+        //
+        // The unnamed overload derives the client name from the type name with
+        // the namespace stripped, so two plugins that both call an interface
+        // ISeerrApiClient collide in the shared factory: whichever registers
+        // second throws and Jellyfin disables it as "Malfunctioned". JellyNotify
+        // has an interface by that exact name, and this plugin sorts before it,
+        // so it was JellyNotify that got knocked out.
+        serviceCollection.AddHttpClient<ITmdbApiClient, TmdbApiClient>("JellyProviderSections.Tmdb");
+        serviceCollection.AddHttpClient<ISeerrApiClient, SeerrApiClient>("JellyProviderSections.Seerr");
 
         // All singletons on purpose. Home Screen Sections calls into
         // SectionResultsProvider outside of any HTTP request, so there is no

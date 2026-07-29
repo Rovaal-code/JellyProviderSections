@@ -174,4 +174,18 @@ public class TmdbDiscoverItem
     /// <summary>Gets the release date, whichever of release_date/first_air_date this item carries.</summary>
     [JsonIgnore]
     public string? ReleaseDate => MovieReleaseDate ?? FirstAirDate;
+
+    /// <summary>
+    /// Gets what this item actually is, read from the response rather than from
+    /// the section that asked for it. discover/movie answers with <c>title</c>
+    /// and discover/tv with <c>name</c>, so whichever field is present
+    /// identifies the type. A mixed section carries both, and everything
+    /// downstream (library lookup, synthetic id, Seerr request) has to follow
+    /// the item and not the row.
+    /// </summary>
+    [JsonIgnore]
+    public Jellyfin.Plugin.JellyProviderSections.Configuration.ProviderSectionContentType ItemContentType =>
+        MovieTitle is not null
+            ? Jellyfin.Plugin.JellyProviderSections.Configuration.ProviderSectionContentType.Movie
+            : Jellyfin.Plugin.JellyProviderSections.Configuration.ProviderSectionContentType.Series;
 }

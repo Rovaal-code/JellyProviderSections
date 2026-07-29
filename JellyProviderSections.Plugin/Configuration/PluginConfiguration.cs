@@ -155,6 +155,18 @@ public enum ProviderSectionContentType
 
     /// <summary>TV series.</summary>
     Series,
+
+    /// <summary>
+    /// Both, in one row. TMDb has no combined discover endpoint, so the section
+    /// runs the movie and the series query separately and interleaves them one
+    /// for one, each keeping its own ranking.
+    ///
+    /// Deliberately not merged by a shared score: TMDb's popularity is not
+    /// comparable across the two endpoints, so sorting the union by it lets one
+    /// type crowd out the other. Alternating needs no cross-type metric and is
+    /// stable, which is what makes the row look intentional rather than random.
+    /// </summary>
+    Mixed,
 }
 
 /// <summary>
