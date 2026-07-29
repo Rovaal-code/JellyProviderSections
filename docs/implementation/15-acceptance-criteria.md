@@ -20,25 +20,43 @@ Verificado ejecutando contra el entorno real de `testenv/` (Jellyfin 10.11.11, H
 | 12 Obtiene regiones | **Cumplido** | 139 regiones reales de TMDb |
 | 13 Obtiene proveedores por región | **Cumplido** | 68 proveedores de series en España |
 | 14 Logos en la configuración | **Cumplido** | `logoPath` real por proveedor |
-| 15 Logo a la izquierda del título | **Cumplido a nivel de contrato** | El `<img>` viaja en el `displayText` que sirve HSS. **Falta la captura visual en navegador**, que el encargo exige explícitamente |
+| 15 Logo a la izquierda del título | **Cumplido, con prueba visual** | `evidence/screenshots/02-titulo-logo-*.png`: recorte del título en las tres filas, temas claro y oscuro. El logo queda a la izquierda del texto, centrado verticalmente, sin desplazar los controles de la fila |
 | 16 Consultas Discover válidas | **Cumplido** | 60 títulos reales de Crunchyroll España |
 | 17/18 Muestra películas y series | **Cumplido** | Secciones de ambos tipos |
 | 19 Resuelve contenido local | **Cumplido** | "Ataque a los Titanes" vuelve como ítem real con `UserData` |
-| 22 Muestra contenido externo | **Cumplido** | 59 de 60 como tarjetas externas |
+| 22 Muestra contenido externo | **Parcial** | 59 de 60 vuelven como tarjetas externas y se dibujan con título y año, pero **sin carátula de TMDb**: el servidor guarda la ruta del póster en `ProviderIds["JellyProviderSectionsPoster"]` y nada la consume. Ver "Pendientes" |
 | 23 Consulta estados de Seerr | **Cumplido** | `Unknown` a `Processing` tras solicitar |
 | 24/25 Solicita películas y series | **Cumplido** | Ambas creadas en Seerr |
 | 26 Atribuye al usuario correcto | **Cumplido** | `jellyfinUserId` coincide con el usuario de la sesión |
 | 28 Contenido ya solicitado | **Cumplido** | 409 y 202 tratados como estado, no como error |
 | 43 No expone secretos | **Cumplido** | `GET /Admin/config` solo devuelve booleanos `hasApiKey` |
-| 44 Pruebas unitarias | **Cumplido** | 29 en verde, incluidos 3 de escape XSS |
+| 44 Pruebas unitarias | **Cumplido** | 36 en verde, incluidos 3 de escape XSS y 7 de identificadores de sección |
 | Seguridad: XSS vía `displayText` | **Cumplido** | Un nombre con `<script>` llega escapado como `&lt;script&gt;` en el servidor real |
 
 | 20/21 Respeta permisos, no revela bibliotecas no autorizadas | **Cumplido** | Un usuario sin acceso a la biblioteca de Series recibe el título como externo (0 locales), el admin lo recibe como local |
 | 31 Se degrada si Seerr cae | **Cumplido** | La fila sigue sirviendo 60 títulos; solicitar devuelve `Unavailable` con HTTP 503 y mensaje correcto |
 | 32 Se degrada si TMDb cae | **Cumplido** | Con clave inválida la home responde 200 y la fila queda vacía, sin excepción; el test informa del 401 |
 | 33 Utiliza caché | **Cumplido** | Segunda carga dentro del TTL no repite la llamada |
+| 35 a 42 Interfaz, temas y responsive | **Cumplido, con prueba visual** | Índice completo en `testenv/evidence/README.md` |
 
-Pendientes de cerrar: **capturas visuales en navegador** (criterios 15, 35 a 42), que el encargo exige explícitamente y no pueden sustituirse por comprobaciones de API, y la medición de rendimiento sobre una biblioteca grande (34), que necesita una biblioteca de miles de ítems que el entorno sintético no tiene.
+### Lo que descubrió la verificación en navegador
+
+Siete defectos que ninguna comprobación de API podía revelar, todos corregidos salvo donde se indica:
+
+1. **El id de sección rompía la página principal entera.** Jellyfin Web resuelve cada fila con `querySelector('.' + id)`; un GUID que empieza por dígito no es un identificador CSS válido, así que lanzaba `SyntaxError` y abortaba el renderizado de *todas* las filas, no solo la nuestra. Los ids se generan ahora con el prefijo `jps` y hay una migración que reescribe los antiguos.
+2. **Las filas de series salían vacías.** Los DTO sintéticos no llevaban `ServerId` y el constructor de tarjetas fallaba con `item or serverId cannot be null`. Las de películas sobrevivían, lo que hacía parecer un problema del tipo de contenido.
+3. **El selector de proveedor mostraba "Proveedor undefined" y no filtraba.** El cliente leía los nombres crudos de TMDb (`provider_name`) en vez del contrato del servidor (`{ id, name, logoPath }`).
+4. **El selector de región mostraba "ES (ES)".** Mismo desajuste con `{ code, name, englishName }`.
+5. **El diagnóstico contradecía al servidor**, reportando TMDb, Seerr, HSS y File Transformation como no detectados con las 3 secciones registradas y funcionando: el cliente esperaba una forma plana y el endpoint responde anidada.
+6. **La pestaña de conexiones no cargaba nada y al guardar destruía la configuración.** Leía `tmdbSettings`/`seerrSettings` (el servidor devuelve `tmdb`/`seerr`) y enviaba un cuerpo anidado a un endpoint que espera `SaveConfigRequest` plano, de modo que "Guardar" mandaba `enabled: false` en ambas integraciones.
+7. **El panel era ilegible en tema claro.** Los tokens de color estaban fijados al tema oscuro. Jellyfin marca el tema activo en `data-theme` del `<html>`; ahora hay un bloque `:root[data-theme="light"]` y las superficies con tinte son tokens en vez de literales.
+
+### Pendientes
+
+- **Carátulas de las tarjetas externas** (criterio 22, parcial). Falta el consumidor de `ProviderIds["JellyProviderSectionsPoster"]`. Jellyfin Web construye la URL de imagen a partir del id del ítem, que en las tarjetas externas es sintético, así que hace falta inyección en cliente vía File Transformation, que es justo para lo que el plugin ya declara esa dependencia.
+- **Tres botones del panel llaman a rutas que no existen** y responden 404: "Sincronizar ahora" (`POST /Admin/sync-now`), "Previsualizar" (`GET /Admin/sections/{id}/preview`) y el "Probar consulta" de la tarjeta (`POST /Admin/sections/{id}/test-query`; el del formulario sí funciona, usa `POST /Admin/test-query`). Faltan los tres endpoints en el servidor.
+- **El estado de sincronización no se persiste.** `LastSyncUtc`, `LastSyncResult` y `LastError` se actualizan solo en memoria, así que cada reinicio los devuelve a "Nunca" y un error antiguo guardado en disco puede quedarse indefinidamente.
+- **Medición de rendimiento con biblioteca grande** (criterio 34): la biblioteca sintética tiene 6 títulos.
 
 | # | Criterio | Cómo se verifica | Evidencia | Alcance |
 |---|---|---|---|---|

@@ -201,12 +201,38 @@ public enum ProviderSectionSyncResult
 public class SectionDefinition
 {
     /// <summary>
+    /// Prefix applied to every generated section id.
+    ///
+    /// Jellyfin Web puts the section id straight into a CSS class and then looks
+    /// the row up with <c>querySelector('.' + id)</c>. A bare GUID starting with
+    /// a digit is not a valid CSS identifier, so that call throws a SyntaxError
+    /// and aborts the whole home render, not just this row. The leading letters
+    /// keep every id a valid selector.
+    /// </summary>
+    public const string IdPrefix = "jps";
+
+    /// <summary>
     /// Gets or sets the stable identifier for this section. Generated server-side
     /// on creation and never changed afterwards: Home Screen Sections uses this
     /// exact string to persist per-user position and enabled state across
     /// restarts, so changing it would silently reset the user's layout.
     /// </summary>
     public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Creates a new section id that is safe to use as a CSS class selector.
+    /// </summary>
+    /// <returns>The generated id.</returns>
+    public static string NewId() => IdPrefix + Guid.NewGuid().ToString("N");
+
+    /// <summary>
+    /// Gets a value indicating whether an id can be used as a CSS class selector.
+    /// Ids created before <see cref="NewId"/> existed start with a digit and cannot.
+    /// </summary>
+    /// <param name="id">The id to check.</param>
+    /// <returns><c>true</c> when the id is a valid CSS identifier.</returns>
+    public static bool IsCssSafeId(string? id) =>
+        !string.IsNullOrEmpty(id) && (char.IsAsciiLetter(id[0]) || id[0] == '_');
 
     /// <summary>
     /// Gets or sets when this section was created (UTC).

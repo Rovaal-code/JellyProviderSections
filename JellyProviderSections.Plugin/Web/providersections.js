@@ -560,7 +560,9 @@
                 box.textContent = data.query;
                 box.classList.remove('jps-hidden');
             }
-            const total = data && (data.totalResults !== undefined ? data.totalResults : (data.items || []).length);
+            // The server answers { query, count, items }, where items is capped
+            // at 12 for the preview: count is the real total.
+            const total = data && (data.count !== undefined ? data.count : (data.items || []).length);
             const pages = data && data.pagesFetched !== undefined ? data.pagesFetched : null;
             let message = 'Consulta correcta. ' + (total !== undefined && total !== null ? total : 0) + ' resultados';
             if (pages !== null) {
@@ -748,18 +750,19 @@
         const select = byId('jps-f-region');
         const previous = select.value;
         clear(select);
+        // GET /Admin/tmdb/regions projects TMDb's snake_case into { code, name,
+        // englishName }, so read that and not the raw TMDb field names.
         regions.forEach(r => {
-            const code = r.iso_3166_1 || r.Iso31661 || r.code;
-            const label = r.native_name || r.english_name || r.NativeName || r.EnglishName || code;
-            const opt = el('option', null, label + ' (' + code + ')');
-            opt.value = code;
+            const label = r.name || r.englishName || r.code;
+            const opt = el('option', null, label + ' (' + r.code + ')');
+            opt.value = r.code;
             select.appendChild(opt);
         });
         if (previous) {
             select.value = previous;
         }
         if (!select.value && regions.length) {
-            select.value = regions[0].iso_3166_1 || regions[0].code;
+            select.value = regions[0].code;
         }
     }
 
@@ -793,9 +796,11 @@
         const container = byId('jps-provider-list');
         clear(container);
 
+        // GET /Admin/tmdb/providers projects TMDb's snake_case into { id, name,
+        // logoPath }, so read that and not the raw TMDb field names.
         const filter = getValue('jps-f-providersearch').toLowerCase();
         const visible = filter
-            ? providers.filter(p => (p.provider_name || p.ProviderName || '').toLowerCase().includes(filter))
+            ? providers.filter(p => (p.name || '').toLowerCase().includes(filter))
             : providers;
 
         if (!visible.length) {
@@ -810,9 +815,9 @@
         }
 
         visible.slice(0, 200).forEach(p => {
-            const id = p.provider_id || p.ProviderId;
-            const name = p.provider_name || p.ProviderName || ('Proveedor ' + id);
-            const logo = p.logo_path || p.LogoPath;
+            const id = p.id;
+            const name = p.name || ('Proveedor ' + id);
+            const logo = p.logoPath;
 
             const option = el('button', 'jps-provider-option' +
                 (chosenProvider && chosenProvider.provider_id === id ? ' jps-selected' : ''));
@@ -942,9 +947,12 @@
     async function loadConfig() {
         const panel = byId('jps-connections-body');
         try {
+            // GET /Admin/config answers { schemaVersion, tmdb: { enabled,
+            // hasApiKey }, seerr: { enabled, serverUrl, ignoreSslErrors,
+            // allowIgnoreQuota, hasApiKey } }.
             const config = await api('/Admin/config');
-            const tmdb = config.tmdbSettings || config.TmdbSettings || {};
-            const seerr = config.seerrSettings || config.SeerrSettings || {};
+            const tmdb = config.tmdb || {};
+            const seerr = config.seerr || {};
 
             setChecked('jps-tmdb-enabled', tmdb.enabled);
             setChecked('jps-seerr-enabled', seerr.enabled);
@@ -954,8 +962,8 @@
 
             // Secrets are never returned by the server. The placeholder tells the
             // admin one is already stored without ever holding its value here.
-            applySecretPlaceholder('jps-tmdb-key', tmdb.hasApiKey || tmdb.apiKeyConfigured);
-            applySecretPlaceholder('jps-seerr-key', seerr.hasApiKey || seerr.apiKeyConfigured);
+            applySecretPlaceholder('jps-tmdb-key', tmdb.hasApiKey);
+            applySecretPlaceholder('jps-seerr-key', seerr.hasApiKey);
 
             panel.classList.remove('jps-hidden');
             hide(byId('jps-connections-loading'));
@@ -985,18 +993,15 @@
 
         // Secret fields are only sent when the admin actually typed something.
         // An empty string means "keep what is stored" (PreserveSecrets server-side).
+        // PUT /Admin/config binds a flat SaveConfigRequest, not nested objects.
         const payload = {
-            tmdbSettings: {
-                enabled: isChecked('jps-tmdb-enabled'),
-                apiKey: getValue('jps-tmdb-key')
-            },
-            seerrSettings: {
-                enabled: isChecked('jps-seerr-enabled'),
-                serverUrl: getValue('jps-seerr-url'),
-                apiKey: getValue('jps-seerr-key'),
-                ignoreSslErrors: isChecked('jps-seerr-ssl'),
-                allowIgnoreQuota: isChecked('jps-seerr-quota')
-            }
+            tmdbEnabled: isChecked('jps-tmdb-enabled'),
+            tmdbApiKey: getValue('jps-tmdb-key'),
+            seerrEnabled: isChecked('jps-seerr-enabled'),
+            seerrServerUrl: getValue('jps-seerr-url'),
+            seerrApiKey: getValue('jps-seerr-key'),
+            seerrIgnoreSslErrors: isChecked('jps-seerr-ssl'),
+            seerrAllowIgnoreQuota: isChecked('jps-seerr-quota')
         };
 
         try {
@@ -1038,41 +1043,76 @@
             const d = await api('/Admin/diagnostics');
             clear(container);
 
+            // GET /Admin/diagnostics answers with a nested shape:
+            // { homeScreenSections: { available, version }, fileTransformation:
+            // { available }, tmdb: { configured, enabled }, seerr: { … },
+            // sections: { total, enabled }, pluginVersion }. It reports how the
+            // plugin is configured, not live connectivity, so the labels say so.
+            const hss = d.homeScreenSections || {};
+            const ft = d.fileTransformation || {};
+            const tmdb = d.tmdb || {};
+            const seerr = d.seerr || {};
+            const secs = d.sections || {};
+
+            const integration = (state, optional) => {
+                if (!state.configured) {
+                    return optional
+                        ? { text: 'Sin configurar (opcional)', kind: 'warn' }
+                        : { text: 'Sin configurar', kind: 'error' };
+                }
+                return state.enabled
+                    ? { text: 'Configurado y activo', kind: 'ok' }
+                    : { text: 'Configurado, desactivado', kind: 'warn' };
+            };
+
+            const tmdbState = integration(tmdb, false);
+            const seerrState = integration(seerr, true);
+
+            // The endpoint carries no sync history, so it is derived from the
+            // sections already loaded in the other tab.
+            const synced = sections.filter(s => s.lastSyncUtc);
+            const lastSync = synced.length
+                ? synced.map(s => s.lastSyncUtc).sort().slice(-1)[0]
+                : null;
+            const failing = sections.filter(s => s.lastError);
+
             const grid = el('div', 'jps-diag-grid');
-            grid.appendChild(diagItem('TMDb',
-                d.tmdbConnected ? 'Conectado' : 'No conectado',
-                d.tmdbConnected ? 'ok' : 'warn'));
-            grid.appendChild(diagItem('Seerr',
-                d.seerrConnected ? 'Conectado' : (d.seerrEnabled ? 'Error de conexión' : 'No configurado'),
-                d.seerrConnected ? 'ok' : (d.seerrEnabled ? 'error' : 'warn')));
+            grid.appendChild(diagItem('TMDb', tmdbState.text, tmdbState.kind));
+            grid.appendChild(diagItem('Seerr', seerrState.text, seerrState.kind));
             grid.appendChild(diagItem('Home Screen Sections',
-                d.homeScreenSectionsDetected
-                    ? ('Detectado' + (d.homeScreenSectionsVersion ? ' (v' + d.homeScreenSectionsVersion + ')' : ''))
+                hss.available
+                    ? ('Detectado' + (hss.version ? ' (v' + hss.version + ')' : ''))
                     : 'No detectado',
-                d.homeScreenSectionsDetected ? 'ok' : 'error'));
+                hss.available ? 'ok' : 'error'));
             grid.appendChild(diagItem('File Transformation',
-                d.fileTransformationDetected ? 'Detectado' : 'No detectado',
-                d.fileTransformationDetected ? 'ok' : 'warn'));
-            grid.appendChild(diagItem('Secciones registradas',
-                (d.registeredSectionCount !== undefined ? d.registeredSectionCount : 0) + ' de ' +
-                (d.totalSectionCount !== undefined ? d.totalSectionCount : sections.length),
+                ft.available ? 'Detectado' : 'No detectado',
+                ft.available ? 'ok' : 'warn'));
+            grid.appendChild(diagItem('Secciones activas',
+                (secs.enabled !== undefined ? secs.enabled : 0) + ' de ' +
+                (secs.total !== undefined ? secs.total : sections.length),
                 'ok'));
-            grid.appendChild(diagItem('Última sincronización', formatDate(d.lastSyncUtc), 'ok'));
+            grid.appendChild(diagItem('Última sincronización',
+                lastSync ? formatDate(lastSync) : 'Nunca',
+                lastSync ? 'ok' : 'warn'));
+            if (d.pluginVersion) {
+                grid.appendChild(diagItem('Versión del plugin', d.pluginVersion, 'ok'));
+            }
             container.appendChild(grid);
 
-            if (!d.homeScreenSectionsDetected) {
+            if (!hss.available) {
                 const warn = el('div', 'jps-result jps-result-error',
                     'Home Screen Sections no está instalado o no se pudo detectar. Sin ese plugin, las secciones creadas aquí no aparecerán en la página principal de Jellyfin.');
                 container.appendChild(warn);
-            } else if (!d.fileTransformationDetected) {
+            } else if (!ft.available) {
                 const warn = el('div', 'jps-result jps-result-warn',
                     'File Transformation no se detectó. Home Screen Sections lo necesita para dibujar las filas en la página principal: las secciones pueden registrarse correctamente y aun así no verse.');
                 container.appendChild(warn);
             }
 
-            if (d.lastError) {
-                container.appendChild(el('div', 'jps-result jps-result-error', 'Último error: ' + d.lastError));
-            }
+            failing.forEach(s => {
+                container.appendChild(el('div', 'jps-result jps-result-error',
+                    'Último error en "' + (s.displayName || s.id) + '": ' + s.lastError));
+            });
 
             const row = el('div', 'jps-btn-row');
             const sync = el('button', 'jps-btn');
@@ -1200,7 +1240,9 @@
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
-            const total = data && (data.totalResults !== undefined ? data.totalResults : (data.items || []).length);
+            // The server answers { query, count, items }, where items is capped
+            // at 12 for the preview: count is the real total.
+            const total = data && (data.count !== undefined ? data.count : (data.items || []).length);
             setResult(result,
                 'Consulta correcta. ' + (total || 0) + ' resultados con estos filtros.',
                 total ? 'ok' : 'warn');

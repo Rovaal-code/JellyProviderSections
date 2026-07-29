@@ -35,6 +35,33 @@ public class ConfigurationTests
     }
 
     [Fact]
+    public void NewId_IsAlwaysAValidCssIdentifier()
+    {
+        // Jellyfin Web resolves the row with querySelector('.' + id). A bare GUID
+        // beginning with a digit throws a SyntaxError there and takes the whole
+        // home screen down with it, so no generated id may start with one.
+        for (var i = 0; i < 200; i++)
+        {
+            var id = SectionDefinition.NewId();
+
+            Assert.StartsWith(SectionDefinition.IdPrefix, id, System.StringComparison.Ordinal);
+            Assert.True(SectionDefinition.IsCssSafeId(id), $"generated id is not CSS safe: {id}");
+        }
+    }
+
+    [Theory]
+    [InlineData("73d44bb5281e449d96fcdde94eca870a", false)]
+    [InlineData("0abc", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    [InlineData("jps73d44bb5281e449d96fcdde94eca870a", true)]
+    [InlineData("_private", true)]
+    public void IsCssSafeId_RejectsIdsThatCannotStartAClassSelector(string? id, bool expected)
+    {
+        Assert.Equal(expected, SectionDefinition.IsCssSafeId(id));
+    }
+
+    [Fact]
     public void PreserveSecrets_KeepsStoredKeysWhenIncomingIsBlank()
     {
         var existing = new PluginConfiguration();

@@ -247,7 +247,7 @@ public class AdminController : ControllerBase
         {
             // Generated here, never accepted from the client: this id is what
             // Home Screen Sections uses to remember each user's layout.
-            Id = Guid.NewGuid().ToString("N"),
+            Id = SectionDefinition.NewId(),
             CreatedUtc = DateTime.UtcNow,
             OrderHint = plugin.Configuration.Sections.Count,
         };
@@ -314,7 +314,7 @@ public class AdminController : ControllerBase
 
         var copy = new SectionDefinition
         {
-            Id = Guid.NewGuid().ToString("N"),
+            Id = SectionDefinition.NewId(),
             CreatedUtc = DateTime.UtcNow,
             OrderHint = plugin.Configuration.Sections.Count,
             DisplayName = $"{source.DisplayName} (copia)",

@@ -80,6 +80,8 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
             return 0;
         }
 
+        MigrateUnsafeIds(configuration);
+
         var assembly = FindAssembly(HomeScreenSectionsAssemblyMarker);
         if (assembly is null)
         {
@@ -144,6 +146,48 @@ public sealed class HomeSectionsRegistrar : IHomeSectionsRegistrar
         }
 
         return registered;
+    }
+
+    /// <summary>
+    /// Rewrites section ids that cannot be used as a CSS class selector.
+    ///
+    /// Ids are meant to be immutable, and this is the one exception: a section
+    /// whose id starts with a digit makes Jellyfin Web throw a SyntaxError out of
+    /// <c>querySelector('.' + id)</c>, which aborts the entire home render, so
+    /// every row disappears, not only ours. Such a section could never have worked,
+    /// so there is no user layout to preserve. Runs once; afterwards every id
+    /// already carries the prefix and the loop is a no-op.
+    /// </summary>
+    /// <param name="configuration">The configuration to migrate in place.</param>
+    private void MigrateUnsafeIds(PluginConfiguration configuration)
+    {
+        var migrated = 0;
+
+        foreach (var section in configuration.Sections)
+        {
+            if (SectionDefinition.IsCssSafeId(section.Id))
+            {
+                continue;
+            }
+
+            var oldId = section.Id;
+            section.Id = string.IsNullOrEmpty(oldId)
+                ? SectionDefinition.NewId()
+                : SectionDefinition.IdPrefix + oldId;
+
+            migrated++;
+
+            _logger.LogInformation(
+                "[ProviderSections] Migrated section id {OldId} to {NewId}: the old value was not a valid CSS "
+                + "identifier and prevented Jellyfin Web from rendering the home screen",
+                oldId,
+                section.Id);
+        }
+
+        if (migrated > 0)
+        {
+            Plugin.Instance?.SavePluginConfiguration(configuration);
+        }
     }
 
     /// <summary>

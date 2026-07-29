@@ -6,6 +6,7 @@ using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.JellyProviderSections.Configuration;
 using Jellyfin.Plugin.JellyProviderSections.Models;
+using MediaBrowser.Controller;
 using MediaBrowser.Controller.Dto;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
@@ -61,6 +62,7 @@ public sealed class LibraryResolver : ILibraryResolver
 
     private readonly ILibraryManager _libraryManager;
     private readonly IDtoService _dtoService;
+    private readonly IServerApplicationHost _appHost;
     private readonly ILogger<LibraryResolver> _logger;
 
     /// <summary>
@@ -68,11 +70,17 @@ public sealed class LibraryResolver : ILibraryResolver
     /// </summary>
     /// <param name="libraryManager">Jellyfin's library manager.</param>
     /// <param name="dtoService">Jellyfin's DTO service.</param>
+    /// <param name="appHost">Server host, used for the server id every DTO must carry.</param>
     /// <param name="logger">Logger.</param>
-    public LibraryResolver(ILibraryManager libraryManager, IDtoService dtoService, ILogger<LibraryResolver> logger)
+    public LibraryResolver(
+        ILibraryManager libraryManager,
+        IDtoService dtoService,
+        IServerApplicationHost appHost,
+        ILogger<LibraryResolver> logger)
     {
         _libraryManager = libraryManager;
         _dtoService = dtoService;
+        _appHost = appHost;
         _logger = logger;
     }
 
@@ -178,11 +186,17 @@ public sealed class LibraryResolver : ILibraryResolver
     /// this user). ProviderIds doubles as a metadata bag, the same trick Home
     /// Screen Sections uses for its own Discover row.
     /// </summary>
-    private static BaseItemDto BuildSyntheticDto(TmdbDiscoverItem item, SectionDefinition section)
+    private BaseItemDto BuildSyntheticDto(TmdbDiscoverItem item, SectionDefinition section)
     {
         var dto = new BaseItemDto
         {
             Id = BuildDeterministicId(item.Id, section.ContentType),
+            // Jellyfin Web's card builder throws "item or serverId cannot be null"
+            // while laying out a Series card without it, and that exception takes
+            // the whole row down: the section renders with its title and zero
+            // cards. Movie cards happen to survive, which is what made this look
+            // like a content-type problem rather than a missing field.
+            ServerId = _appHost.SystemId,
             Name = item.Title,
             OriginalTitle = item.OriginalTitle,
             Overview = item.Overview,

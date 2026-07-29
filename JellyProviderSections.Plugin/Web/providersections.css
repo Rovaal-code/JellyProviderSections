@@ -29,12 +29,57 @@
     --jps-danger: #ff5577;
     --jps-warning: #ffbb55;
     --jps-info: #35e5f0;
+    /* Surface tints. Tokens rather than literals because their whole job is
+       "slightly lighter than the backdrop", which has to invert when Jellyfin
+       is on its light theme. */
+    --jps-tint-soft: rgba(255, 255, 255, 0.04);
+    --jps-tint: rgba(255, 255, 255, 0.06);
+    --jps-tint-strong: rgba(255, 255, 255, 0.1);
+    --jps-sunken: rgba(0, 0, 0, 0.3);
+    --jps-sunken-strong: rgba(0, 0, 0, 0.35);
+    --jps-panel: #12121f;
+    --jps-knob: #fff;
+    --jps-on-accent: #0a0a16;
     --jps-radius: 16px;
     --jps-radius-sm: 10px;
     --jps-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
     --jps-transition: 0.2s ease;
     --jps-font-display: -apple-system, 'Segoe UI', Roboto, sans-serif;
     --jps-font-body: -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Jellyfin stamps the active theme id on <html>. Only "light" ships a light
+   backdrop; the other five (dark, appletv, blueradiance, purplehaze, wmc) are
+   dark, so the defaults above already suit them. Without this block the glass
+   surfaces and the near-white text land on a white page and the whole
+   configuration page becomes unreadable. */
+:root[data-theme="light"] {
+    --jps-accent: #6b32c9;
+    --jps-accent-hover: #5526a8;
+    --jps-accent-glow: rgba(107, 50, 201, 0.25);
+    --jps-magenta: #c2158f;
+    --jps-cyan: #0f7f88;
+    --jps-bg: #f4f2fa;
+    --jps-surface: rgba(64, 30, 120, 0.05);
+    --jps-surface-2: rgba(64, 30, 120, 0.03);
+    --jps-text: #1c1830;
+    --jps-text-muted: #514a72;
+    --jps-text-faint: #7a7398;
+    --jps-border: rgba(90, 60, 160, 0.22);
+    --jps-border-strong: rgba(90, 60, 160, 0.45);
+    --jps-success: #10795a;
+    --jps-danger: #c2183c;
+    --jps-warning: #8a5b00;
+    --jps-info: #0f7f88;
+    --jps-tint-soft: rgba(30, 10, 70, 0.03);
+    --jps-tint: rgba(30, 10, 70, 0.06);
+    --jps-tint-strong: rgba(30, 10, 70, 0.1);
+    --jps-sunken: rgba(255, 255, 255, 0.75);
+    --jps-sunken-strong: rgba(255, 255, 255, 0.85);
+    --jps-panel: #ffffff;
+    --jps-knob: #ffffff;
+    --jps-on-accent: #ffffff;
+    --jps-shadow: 0 8px 24px rgba(40, 20, 80, 0.14);
 }
 
 /* ── Utilities ──────────────────────────────────────────────── */
@@ -130,13 +175,13 @@
 }
 
 .jps-tab-btn:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--jps-tint);
     color: var(--jps-text);
 }
 
 .jps-tab-btn.active {
     background: linear-gradient(135deg, var(--jps-accent), var(--jps-cyan));
-    color: #0a0a16;
+    color: var(--jps-on-accent);
     box-shadow: 0 0 18px var(--jps-accent-glow);
 }
 
@@ -280,7 +325,7 @@
     height: 32px;
     object-fit: contain;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--jps-tint);
     align-self: center;
 }
 
@@ -292,7 +337,7 @@
     width: 32px;
     height: 32px;
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--jps-tint);
     color: var(--jps-text-faint);
     font-size: 1.15rem;
     align-self: center;
@@ -357,7 +402,7 @@
 }
 
 .jps-badge-inactive {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--jps-tint);
     color: var(--jps-text-faint);
     border: 1px solid var(--jps-border);
 }
@@ -477,7 +522,7 @@
     font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
     font-size: 0.78rem;
     color: var(--jps-cyan);
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--jps-sunken-strong);
     border: 1px solid var(--jps-border);
     border-radius: var(--jps-radius-sm);
     padding: 0.6rem 0.75rem;
@@ -510,7 +555,7 @@
 }
 
 .jps-icon-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--jps-tint-strong);
     color: var(--jps-text);
     border-color: var(--jps-border);
 }
@@ -520,7 +565,7 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.5rem 1rem;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--jps-tint);
     border: 1px solid var(--jps-border);
     border-radius: var(--jps-radius-sm);
     color: var(--jps-text);
@@ -531,7 +576,7 @@
 }
 
 .jps-btn:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--jps-tint-strong);
     border-color: var(--jps-border-strong);
 }
 
@@ -543,7 +588,7 @@
 .jps-btn-primary {
     background: linear-gradient(135deg, var(--jps-accent), var(--jps-cyan));
     border-color: transparent;
-    color: #0a0a16;
+    color: var(--jps-on-accent);
 }
 
 .jps-btn-primary:hover:not(:disabled) {
@@ -617,7 +662,7 @@
 .jps-select {
     width: 100%;
     padding: 0.55rem 0.75rem;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--jps-sunken);
     border: 1px solid var(--jps-border);
     border-radius: var(--jps-radius-sm);
     color: var(--jps-text);
@@ -636,7 +681,7 @@
 }
 
 .jps-select option {
-    background: #12121f;
+    background: var(--jps-panel);
     color: var(--jps-text);
 }
 
@@ -665,7 +710,7 @@
     position: relative;
     width: 44px;
     height: 24px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--jps-tint-strong);
     border-radius: 12px;
     transition: background var(--jps-transition);
     flex-shrink: 0;
@@ -678,7 +723,7 @@
     left: 3px;
     width: 18px;
     height: 18px;
-    background: #fff;
+    background: var(--jps-knob);
     border-radius: 50%;
     transition: transform var(--jps-transition);
 }
@@ -750,7 +795,7 @@
     overflow-y: auto;
     border: 1px solid var(--jps-border);
     border-radius: var(--jps-radius-sm);
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--jps-sunken);
     margin-top: 0.4rem;
 }
 
@@ -762,7 +807,7 @@
     padding: 0.5rem 0.75rem;
     background: transparent;
     border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid var(--jps-tint-soft);
     color: var(--jps-text);
     font-size: 0.88rem;
     text-align: left;
@@ -775,7 +820,7 @@
 }
 
 .jps-provider-option:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--jps-tint);
 }
 
 .jps-provider-option.jps-selected {
@@ -788,7 +833,7 @@
     height: 28px;
     object-fit: contain;
     border-radius: 5px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--jps-tint);
     flex-shrink: 0;
 }
 
@@ -972,7 +1017,7 @@
     aspect-ratio: 2 / 3;
     object-fit: cover;
     border-radius: var(--jps-radius-sm);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--jps-tint);
 }
 
 .jps-preview-title {
