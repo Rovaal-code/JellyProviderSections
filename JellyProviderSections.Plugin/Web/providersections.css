@@ -1129,15 +1129,14 @@
     border-color: rgba(255, 187, 85, 0.3);
 }
 
+/* TMDb's mark is a wide wordmark and Seerr's is square, so the slot is sized by
+   height with the width left to follow. */
 .jps-overview-logo {
-    font-size: 1.5rem;
-    line-height: 1;
+    height: 1.5rem;
+    width: auto;
+    max-width: 3.5rem;
     flex-shrink: 0;
-    color: var(--jps-text-muted);
-}
-
-.jps-overview-ok .jps-overview-logo {
-    color: var(--jps-accent);
+    object-fit: contain;
 }
 
 .jps-overview-text {

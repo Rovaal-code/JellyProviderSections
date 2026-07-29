@@ -79,6 +79,36 @@ public sealed class WebAssetsController : ControllerBase
         => GetEmbeddedResource("home.js", "application/javascript");
 
     /// <summary>
+    /// Serves a bundled service icon.
+    ///
+    /// Bundled rather than linked from a CDN so the administration page keeps
+    /// working on a server with no route to the internet, and so loading it does
+    /// not tell a third party who is looking at it. Named explicitly, never from
+    /// the request, so this route cannot be walked into the rest of the embedded
+    /// resources.
+    /// </summary>
+    /// <param name="name">The icon name, tmdb or seerr.</param>
+    /// <returns>The SVG, or 404 for anything else.</returns>
+    [HttpGet("Web/{name}.svg")]
+    public ActionResult GetServiceIcon(string name)
+    {
+        var file = name switch
+        {
+            "tmdb" => "tmdb.svg",
+            "seerr" => "seerr.svg",
+            _ => null,
+        };
+
+        if (file is null)
+        {
+            return NotFound();
+        }
+
+        Response.Headers.CacheControl = "public, max-age=604800";
+        return GetEmbeddedResource(file, "image/svg+xml");
+    }
+
+    /// <summary>
     /// Serves the poster of an external title, cached locally after the first fetch.
     /// Requested by the home script, which knows only the TMDb id.
     /// </summary>

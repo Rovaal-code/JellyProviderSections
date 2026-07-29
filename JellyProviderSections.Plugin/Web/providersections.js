@@ -961,7 +961,7 @@
         const services = [
             {
                 name: 'TMDb',
-                logo: 'movie_filter',
+                logo: 'tmdb',
                 required: true,
                 ok: !!(tmdb.enabled && tmdb.hasApiKey),
                 detail: !tmdb.hasApiKey
@@ -970,7 +970,7 @@
             },
             {
                 name: 'Seerr',
-                logo: 'playlist_add_check',
+                logo: 'seerr',
                 required: false,
                 ok: !!(seerr.enabled && seerr.hasApiKey && seerr.serverUrl),
                 detail: !(seerr.hasApiKey && seerr.serverUrl)
@@ -983,7 +983,12 @@
             const kind = s.ok ? 'ok' : (s.required ? 'error' : 'warn');
             const item = el('div', 'jps-overview-item jps-overview-' + kind);
 
-            item.appendChild(icon(s.logo, 'jps-overview-logo'));
+            var logo = el('img', 'jps-overview-logo');
+            logo.src = API_BASE + '/Web/' + s.logo + '.svg';
+            logo.alt = '';
+            logo.setAttribute('aria-hidden', 'true');
+            logo.addEventListener('error', () => { logo.style.visibility = 'hidden'; });
+            item.appendChild(logo);
 
             const text = el('div', 'jps-overview-text');
             text.appendChild(el('span', 'jps-overview-name', s.name));
