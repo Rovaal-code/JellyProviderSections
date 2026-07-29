@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1596" height="900" viewBox="0 0 1596 900">
+  <!-- Same canvas, palette and construction as JellyNotify's logo: purple bell,
+       gold emblem, dark dot fringe, light wavy tentacles. The bell is replaced by
+       a row of poster cards, which is what this plugin puts on the home screen.
+       The row is centred on the bell's axis (x=798.5), like the bell there. -->
+  <defs>
+    <linearGradient id="domeShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a5cf2"/>
+      <stop offset="1" stop-color="#7c4fe6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Tentacles -->
+  <g fill="none" stroke="#9162ff" stroke-width="17" stroke-linecap="round">
+    <path d="M628 500 C 606 560, 656 600, 630 660 C 610 706, 640 730, 628 758"/>
+    <path d="M694 500 C 672 562, 722 602, 696 662 C 676 708, 706 732, 694 758"/>
+    <path d="M792 500 L 792 762"/>
+    <path d="M886 500 C 908 562, 858 602, 884 662 C 904 708, 874 732, 886 758"/>
+    <path d="M952 500 C 974 560, 924 600, 950 660 C 970 706, 940 730, 952 758"/>
+  </g>
+
+  <!-- Dome -->
+  <path d="M563 500 C 563 296, 664 113, 798 113 C 932 113, 1034 296, 1034 500 Z" fill="url(#domeShade)"/>
+
+  <!-- Highlight streak -->
+  <path d="M654 448 C 636 352, 668 254, 706 214" fill="none" stroke="#9f7bff" stroke-width="30"
+        stroke-linecap="round" opacity="0.75"/>
+
+  <!-- Dot fringe -->
+  <g fill="#5832be">
+    <circle cx="628" cy="500" r="30"/>
+    <circle cx="694" cy="500" r="30"/>
+    <circle cx="760" cy="500" r="30"/>
+    <circle cx="826" cy="500" r="30"/>
+    <circle cx="892" cy="500" r="30"/>
+    <circle cx="958" cy="500" r="30"/>
+  </g>
+
+  <!-- The row: three poster cards, the middle one lifted, as in a carousel -->
+  <g>
+    <rect x="655" y="286" width="82" height="122" rx="15" fill="#ffc837" stroke="#e0a516" stroke-width="7"/>
+    <rect x="753" y="258" width="92" height="178" rx="18" fill="#ffc837" stroke="#e0a516" stroke-width="8"/>
+    <rect x="861" y="286" width="82" height="122" rx="15" fill="#ffc837" stroke="#e0a516" stroke-width="7"/>
+    <path d="M783 314 L 829 347 L 783 380 Z" fill="#7c4fe6"/>
+  </g>
+</svg>
