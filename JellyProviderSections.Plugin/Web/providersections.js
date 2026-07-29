@@ -417,6 +417,8 @@
             { value: 'NeverRun' }, { value: 'Success' }, { value: 'PartialFailure' }, { value: 'Failure' }
         ])] || 'Desconocido'));
         cacheGrid.appendChild(field('Solicitudes', section.requestsEnabled ? 'Activadas' : 'Desactivadas'));
+        cacheGrid.appendChild(field('Ya en la biblioteca',
+            section.hideLibraryItems === false ? 'Se muestra' : 'Se oculta'));
         body.appendChild(cacheGrid);
 
         // 6. Diagnóstico
@@ -663,6 +665,7 @@
         setValue('jps-f-cache', section ? section.cacheDurationMinutes : 360);
         setChecked('jps-f-adult', section ? section.includeAdult : false);
         setChecked('jps-f-requests', section ? section.requestsEnabled : true);
+        setChecked('jps-f-hidelibrary', section ? section.hideLibraryItems !== false : true);
         setChecked('jps-f-enabled', section ? section.enabled : true);
 
         if (section && section.tmdbProviderId) {
@@ -883,6 +886,7 @@
             minVoteCount: parseInt(getValue('jps-f-minvotes'), 10) || 0,
             includeAdult: isChecked('jps-f-adult'),
             requestsEnabled: isChecked('jps-f-requests'),
+            hideLibraryItems: isChecked('jps-f-hidelibrary'),
             cacheDurationMinutes: parseInt(getValue('jps-f-cache'), 10) || 360
         };
         if (editingId) {

@@ -67,7 +67,15 @@ public interface ITmdbApiClient
     /// <param name="section">The section definition.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The deduplicated results, capped at MaxItems.</returns>
-    Task<IReadOnlyList<TmdbDiscoverItem>> DiscoverAllAsync(SectionDefinition section, CancellationToken cancellationToken);
+    /// <param name="wantedOverride">
+    /// How many titles to collect instead of the section's own maximum. A
+    /// section that hides what the library already has asks for more than it
+    /// will show, so the row still fills up after the filtering.
+    /// </param>
+    Task<IReadOnlyList<TmdbDiscoverItem>> DiscoverAllAsync(
+        SectionDefinition section,
+        CancellationToken cancellationToken,
+        int? wantedOverride = null);
 
     /// <summary>
     /// Downloads a provider logo as raw bytes, for local caching and serving.

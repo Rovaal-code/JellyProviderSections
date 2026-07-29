@@ -23,7 +23,7 @@ Verificado ejecutando contra el entorno real de `testenv/` (Jellyfin 10.11.11, H
 | 15 Logo a la izquierda del título | **Cumplido, con prueba visual** | `evidence/screenshots/02-titulo-logo-*.png`: recorte del título en las tres filas, temas claro y oscuro. El logo queda a la izquierda del texto, centrado verticalmente, sin desplazar los controles de la fila |
 | 16 Consultas Discover válidas | **Cumplido** | 60 títulos reales de Crunchyroll España |
 | 17/18 Muestra películas y series | **Cumplido** | Secciones de ambos tipos |
-| 19 Resuelve contenido local | **Cumplido** | "Ataque a los Titanes" vuelve como ítem real con `UserData` |
+| 19 Resuelve contenido local | **Cumplido, ahora opcional** | La resolución sigue igual, pero desde 0.1.5.0 la sección oculta por defecto lo que ya está en la biblioteca (`HideLibraryItems`), porque la fila existe para enseñar lo que el proveedor tiene y el servidor no. Con la opción desactivada, "Ataque a los Titanes" vuelve a salir como ítem real con `UserData` |
 | 22 Muestra contenido externo | **Cumplido, con prueba visual** | Las 99 tarjetas externas de las tres filas se dibujan en vertical con su carátula de TMDb, servida por el plugin. Al pulsarlas se abre la ficha de Jellyfin Enhanced (`evidence/screenshots/11-…`) |
 | 23 Consulta estados de Seerr | **Cumplido** | `Unknown` a `Processing` tras solicitar |
 | 24/25 Solicita películas y series | **Cumplido** | Ambas creadas en Seerr |

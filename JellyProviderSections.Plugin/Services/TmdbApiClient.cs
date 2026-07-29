@@ -209,16 +209,20 @@ public sealed class TmdbApiClient : ITmdbApiClient
     /// <inheritdoc />
     public async Task<IReadOnlyList<TmdbDiscoverItem>> DiscoverAllAsync(
         SectionDefinition section,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int? wantedOverride = null)
     {
         ArgumentNullException.ThrowIfNull(section);
 
+        var wanted = Math.Max(1, wantedOverride ?? section.MaxItems);
+
         if (section.ContentType == ProviderSectionContentType.Mixed)
         {
-            return await DiscoverMixedAsync(section, cancellationToken).ConfigureAwait(false);
+            return await DiscoverMixedAsync(section, wanted, cancellationToken).ConfigureAwait(false);
         }
 
-        return await DiscoverSingleAsync(section, section.ContentType, cancellationToken).ConfigureAwait(false);
+        return await DiscoverSingleAsync(section, section.ContentType, wanted, cancellationToken)
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -234,13 +238,12 @@ public sealed class TmdbApiClient : ITmdbApiClient
     /// </summary>
     private async Task<IReadOnlyList<TmdbDiscoverItem>> DiscoverMixedAsync(
         SectionDefinition section,
+        int wanted,
         CancellationToken cancellationToken)
     {
-        var wanted = Math.Max(1, section.MaxItems);
-
-        var movies = await DiscoverSingleAsync(section, ProviderSectionContentType.Movie, cancellationToken)
+        var movies = await DiscoverSingleAsync(section, ProviderSectionContentType.Movie, wanted, cancellationToken)
             .ConfigureAwait(false);
-        var series = await DiscoverSingleAsync(section, ProviderSectionContentType.Series, cancellationToken)
+        var series = await DiscoverSingleAsync(section, ProviderSectionContentType.Series, wanted, cancellationToken)
             .ConfigureAwait(false);
 
         var merged = new List<TmdbDiscoverItem>(wanted);
@@ -264,9 +267,9 @@ public sealed class TmdbApiClient : ITmdbApiClient
     private async Task<IReadOnlyList<TmdbDiscoverItem>> DiscoverSingleAsync(
         SectionDefinition section,
         ProviderSectionContentType contentType,
+        int wanted,
         CancellationToken cancellationToken)
     {
-        var wanted = Math.Max(1, section.MaxItems);
         var pagesNeeded = Math.Min(
             MaxPagesPerSection,
             (int)Math.Ceiling(wanted / (double)ResultsPerPage));

@@ -106,6 +106,16 @@ public sealed class LibraryResolver : ILibraryResolver
 
             if (localItem is not null)
             {
+                // Dropped rather than replaced: the row exists to surface what
+                // the provider has and this server does not, and the library has
+                // its own rows for the rest. Evaluated per user, so a title in a
+                // library someone cannot see is not "already in the library" for
+                // them and is still offered.
+                if (section.HideLibraryItems)
+                {
+                    continue;
+                }
+
                 var dto = BuildLocalDto(localItem, user);
                 if (dto is not null)
                 {

@@ -1,5 +1,4 @@
-JellyProvider Sections v0.1.4.0 - the real TMDb and Seerr marks
+JellyProvider Sections v0.1.5.0 - the rows now leave out what you already have, and the cards stop pretending to be library items
 
-The integration state in the Secciones tab now shows each service's own logo instead of a stand-in glyph.
-
-Both are bundled with the plugin and served from it, rather than linked from a CDN: the administration page keeps working on a server with no route to the internet, and opening it does not tell a third party who is looking at it. Same reason the provider logos and the card artwork are already cached and served locally.
+- Sections no longer show titles that are already in your library. These rows exist to surface what a provider has and your server does not, and the library has its own rows for the rest. It is a per-section switch, on by default, under Filtros avanzados. The row is topped back up so it still reaches the number of items you asked for. Evaluated per user: a title sitting in a library someone cannot see is not "already in the library" for them, and they are still offered it.
+- External cards no longer carry Jellyfin's library-item attributes (`data-id`, `data-serverid`, `data-type` and the rest). They now match Home Screen Sections' own discover cards exactly. This is what was making third-party home screen scripts, a hover trailer or a description overlay for instance, treat these cards as real library items and go looking for something the server does not have.

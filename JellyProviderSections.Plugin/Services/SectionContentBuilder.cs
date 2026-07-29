@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Database.Implementations.Entities;
@@ -80,7 +81,12 @@ public sealed class SectionContentBuilder : ISectionContentBuilder
             return Array.Empty<BaseItemDto>();
         }
 
-        return _libraryResolver.Resolve(discoverResults, section, user);
+        var resolved = _libraryResolver.Resolve(discoverResults, section, user);
+
+        // Over-fetched above when hiding, so trim back to what the row asked for.
+        return resolved.Count > section.MaxItems
+            ? resolved.Take(section.MaxItems).ToList()
+            : resolved;
     }
 
     /// <inheritdoc />
@@ -102,7 +108,16 @@ public sealed class SectionContentBuilder : ISectionContentBuilder
 
         try
         {
-            var results = await _tmdbClient.DiscoverAllAsync(section, cancellationToken).ConfigureAwait(false);
+            // A section that hides what the library already has drops titles
+            // after TMDb has answered, so asking for exactly MaxItems would leave
+            // the row short by however many the server happens to own. Double it,
+            // within TMDb's own practical ceiling.
+            var wanted = section.HideLibraryItems
+                ? Math.Min(200, Math.Max(1, section.MaxItems) * 2)
+                : section.MaxItems;
+
+            var results = await _tmdbClient.DiscoverAllAsync(section, cancellationToken, wanted)
+                .ConfigureAwait(false);
 
             if (results.Count > 0)
             {
@@ -110,7 +125,7 @@ public sealed class SectionContentBuilder : ISectionContentBuilder
                 _cache.Set(cacheKey, results, ttl);
 
                 section.LastSyncUtc = DateTime.UtcNow;
-                section.LastSyncResult = results.Count >= section.MaxItems
+                section.LastSyncResult = results.Count >= Math.Min(wanted, section.MaxItems)
                     ? ProviderSectionSyncResult.Success
                     : ProviderSectionSyncResult.PartialFailure;
                 section.LastError = null;

@@ -363,6 +363,7 @@ public class AdminController : ControllerBase
             MinVoteCount = source.MinVoteCount,
             IncludeAdult = source.IncludeAdult,
             RequestsEnabled = source.RequestsEnabled,
+            HideLibraryItems = source.HideLibraryItems,
             CacheDurationMinutes = source.CacheDurationMinutes,
         };
 
@@ -711,6 +712,7 @@ public class AdminController : ControllerBase
         section.MinVoteCount = Math.Max(0, request.MinVoteCount);
         section.IncludeAdult = request.IncludeAdult;
         section.RequestsEnabled = request.RequestsEnabled;
+        section.HideLibraryItems = request.HideLibraryItems;
         section.CacheDurationMinutes = Math.Max(1, request.CacheDurationMinutes);
     }
 
@@ -746,6 +748,7 @@ public class AdminController : ControllerBase
         minVoteCount = section.MinVoteCount,
         includeAdult = section.IncludeAdult,
         requestsEnabled = section.RequestsEnabled,
+        hideLibraryItems = section.HideLibraryItems,
         cacheDurationMinutes = section.CacheDurationMinutes,
         createdUtc = section.CreatedUtc,
         modifiedUtc = section.ModifiedUtc,
@@ -866,6 +869,9 @@ public class SectionRequest
 
     /// <summary>Gets or sets a value indicating whether requests are offered.</summary>
     public bool RequestsEnabled { get; set; } = true;
+
+    /// <summary>Gets or sets a value indicating whether library titles are left out.</summary>
+    public bool HideLibraryItems { get; set; } = true;
 
     /// <summary>Gets or sets the cache lifetime in minutes.</summary>
     public int CacheDurationMinutes { get; set; } = 360;

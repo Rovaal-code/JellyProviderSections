@@ -66,6 +66,31 @@
         }
     }
 
+    /* Everything Jellyfin's card builder writes to say "this is a library item".
+       Home Screen Sections' own discover cards carry none of it: they have only
+       data-index, data-tmdb-id and data-media-type.
+
+       Leaving them on is not cosmetic. Any script that walks the home screen
+       looking for library items, a hover-trailer or a description overlay for
+       instance, sees a card that claims to be one, and then asks the server
+       about an item that is not there. Once the card is decorated the id has
+       already been read, so none of this is needed any more. */
+    var ITEM_ATTRIBUTES = [
+        'data-id', 'data-serverid', 'data-type', 'data-mediatype', 'data-isfolder',
+        'data-context', 'data-prefix', 'data-channelid', 'data-itemtype', 'data-played'
+    ];
+
+    function stripItemAttributes(card) {
+        var nodes = [card].concat(
+            [].slice.call(card.querySelectorAll('[data-id], [data-serverid], [data-type], [data-itemtype]')));
+
+        nodes.forEach(function (node) {
+            ITEM_ATTRIBUTES.forEach(function (attribute) {
+                node.removeAttribute(attribute);
+            });
+        });
+    }
+
     function externalItemInfo(id) {
         if (!id || id.length !== 32 || id.slice(MARKER_START, MARKER_END) !== MARKER) {
             return null;
@@ -162,6 +187,7 @@
 
         applyPoster(card, posterUrl(info.tmdbId));
         addRequestButton(card, info);
+        stripItemAttributes(card);
 
         /* Jellyfin Enhanced listens on document in the capture phase, so when it
            is installed it stops the event before this ever runs. When it is not,
@@ -353,8 +379,10 @@
         // One request for everything this pass decorated, not one per card. The
         // root itself counts: the observer hands over one card at a time, and
         // querySelectorAll only ever looks at descendants.
-        var decorated = [].slice.call(root.querySelectorAll('.card.discover-card[data-tmdb-id]'));
-        if (root.classList && root.classList.contains('discover-card') && root.hasAttribute('data-tmdb-id')) {
+        // Scoped to cards this script decorated. Home Screen Sections' own
+        // discover rows carry the same class and must be left alone.
+        var decorated = [].slice.call(root.querySelectorAll('.card[data-jps-decorated][data-tmdb-id]'));
+        if (root.dataset && root.dataset[DECORATED] && root.hasAttribute('data-tmdb-id')) {
             decorated.push(root);
         }
 

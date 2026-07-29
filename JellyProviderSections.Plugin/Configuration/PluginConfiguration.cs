@@ -375,6 +375,17 @@ public class SectionDefinition
     public bool RequestsEnabled { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets a value indicating whether titles already in the library are
+    /// left out of this row.
+    ///
+    /// On by default: these rows exist to surface what a provider has and the
+    /// server does not, and the library already has its own rows for the rest.
+    /// A title hidden here is hidden per user, so someone who cannot see the
+    /// library holding it still gets it offered.
+    /// </summary>
+    public bool HideLibraryItems { get; set; } = true;
+
+    /// <summary>
     /// Gets or sets how long this section's discover results stay cached.
     /// </summary>
     public int CacheDurationMinutes { get; set; } = 360;
